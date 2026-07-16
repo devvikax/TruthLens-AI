@@ -35,7 +35,7 @@ const extractTextFromImage = async (imagePath) => {
     return cleanedText;
   } catch (error) {
     console.error(`OCR Service Error: ${error.message}`);
-    throw new Error(`OCR processing failure: ${error.message}`);
+    throw new Error('This image screenshot could not be parsed. The file may be corrupted or the resolution is too low. Please upload a clear, high-contrast screenshot.');
   }
 };
 

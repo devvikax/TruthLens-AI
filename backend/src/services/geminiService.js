@@ -46,7 +46,7 @@ const queryOpenRouter = async (messages, isJson = false) => {
         temperature: 0.1,
         max_tokens: 1500
       }),
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(30000)
     });
 
     if (!response.ok) {
@@ -347,5 +347,8 @@ const getMockNarrative = (score) => {
 module.exports = {
   analyzeText,
   generateNarrative,
-  chatContextualResponse
+  chatContextualResponse,
+  getGeminiClient,
+  isOpenRouterConfigured,
+  queryOpenRouter
 };

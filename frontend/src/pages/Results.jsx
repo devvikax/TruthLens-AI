@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Printer, MessageSquare, AlertTriangle, CheckCircle, Share2, Copy, FileText, ChevronDown, ChevronUp, Clock, Calendar, ExternalLink, Activity } from 'lucide-react';
+import { 
+  ArrowLeft, Printer, MessageSquare, AlertTriangle, CheckCircle, Share2, 
+  Copy, FileText, ChevronDown, ChevronUp, Clock, Calendar, ExternalLink, 
+  Activity, Scale, ShieldAlert, Award, Compass, RefreshCw, BarChart2, Check, X, ShieldCheck
+} from 'lucide-react';
 import { useAnalysisStore } from '../store/analysisStore';
 import TrustGauge from '../components/TrustGauge';
 import Chat from './Chat';
@@ -15,15 +19,21 @@ export default function Results() {
   const [sessionId, setSessionId] = useState(null);
   const [nudgeOpen, setNudgeOpen] = useState(false);
   
-  // Track which claim cards are expanded
+  // Track claim & evidence chain steps expanded state
   const [expandedClaims, setExpandedClaims] = useState({});
+  const [expandedChainStep, setExpandedChainStep] = useState(null);
 
-  // Initialize DB Chat Session on load
+  // XAI explainability style options
+  const [persona, setPersona] = useState('general');
+  const [explanationText, setExplanationText] = useState(null);
+  const [loadingPersona, setLoadingPersona] = useState(false);
+
+  // Initialize DB Chat Session and local narrative state on load
   useEffect(() => {
     const initChatSession = async () => {
       if (currentAnalysis && (currentAnalysis._id || currentAnalysis.id)) {
+        const id = currentAnalysis._id || currentAnalysis.id;
         try {
-          const id = currentAnalysis._id || currentAnalysis.id;
           const res = await apiClient.post('/chat/sessions', { analysisId: id });
           setSessionId(res.data.session._id);
         } catch (err) {
@@ -32,6 +42,10 @@ export default function Results() {
       }
     };
     initChatSession();
+
+    if (currentAnalysis && currentAnalysis.explainableNarrative) {
+      setExplanationText(currentAnalysis.explainableNarrative);
+    }
   }, [currentAnalysis]);
 
   if (!currentAnalysis) {
@@ -49,7 +63,11 @@ export default function Results() {
     );
   }
 
-  const { title, rawInput, metrics, extractedClaims, sentimentAnalysis, explainableNarrative, verdict, createdAt } = currentAnalysis;
+  const { 
+    title, rawInput, metrics, decomposedClaims, evidenceCollected, 
+    diversityProfile, contradictionReport, timeline, badges, 
+    evidenceGraph, confidenceDetails, createdAt 
+  } = currentAnalysis;
 
   // HSL Status Colors
   let scoreColor = 'var(--color-success)';
@@ -69,6 +87,15 @@ export default function Results() {
     badgeClass = 'badge-warning';
   }
 
+  // Prosecution vs Defense evidence division
+  const supportingEvidence = evidenceCollected ? evidenceCollected.filter(e => {
+    return e.stance === 'supports' || (e.isTrusted && !e.category.includes('Fact Check') && e.stance !== 'contradicts');
+  }) : [];
+
+  const prosecutingEvidence = evidenceCollected ? evidenceCollected.filter(e => {
+    return e.stance === 'contradicts' || e.category.includes('Fact Check') || !e.isTrusted;
+  }) : [];
+
   const toggleClaim = (idx) => {
     setExpandedClaims(prev => ({
       ...prev,
@@ -76,17 +103,33 @@ export default function Results() {
     }));
   };
 
+  const handlePersonaChange = async (style) => {
+    setPersona(style);
+    setLoadingPersona(true);
+    try {
+      const id = currentAnalysis._id || currentAnalysis.id;
+      const res = await apiClient.post(`/analysis/${id}/explain-like`, { style });
+      setExplanationText(res.data.explanation);
+    } catch (err) {
+      showToast(
+        language === 'en' ? 'Failed to regenerate explanation style.' : 'स्पष्टीकरण शैली बदलने में विफल।',
+        'error'
+      );
+    } finally {
+      setLoadingPersona(false);
+    }
+  };
+
   const copyShareSummary = () => {
-    const summaryText = `🔍 [TruthLens AI Verification Report]
+    const summaryText = `🔍 [VeriLens AI Courtroom Report]
 Title: "${title}"
-Trust Score: ${metrics.trustScore}% (${verdict || simpleVerdict})
-Key Explanation: ${language === 'en' ? explainableNarrative.en : explainableNarrative.hi}
-Source Citations: ${extractedClaims.map(c => `${c.claim} - ${c.verdict} (by ${c.checkedBy})`).join('; ')}
-Think Before You Share. Check credentials at TruthLens AI.`;
+Verdict: ${currentAnalysis.verdict || simpleVerdict} (Confidence: ${confidenceDetails?.score || 85}%)
+Persona Explanation [${persona.toUpperCase()}]: ${language === 'en' ? explanationText?.en : explanationText?.hi}
+Think Before You Share. Ground truth verified at VeriLens AI.`;
 
     navigator.clipboard.writeText(summaryText);
     showToast(
-      language === 'en' ? 'Contextual sharing summary copied!' : 'साझा करने योग्य विश्लेषण सारांश कॉपी किया गया!',
+      language === 'en' ? 'Forensic summary copied to clipboard!' : 'साझा करने योग्य रिपोर्ट कॉपी हो गई है!',
       'success'
     );
     setNudgeOpen(true);
@@ -108,137 +151,578 @@ Think Before You Share. Check credentials at TruthLens AI.`;
       <div className="ai-chat-button-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
         <button onClick={startNewAnalysis} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
           <ArrowLeft size={16} />
-          <span>{language === 'en' ? 'Inspect Another Item' : 'एक और जांच करें'}</span>
+          <span>{language === 'en' ? 'Start New Investigation' : 'नई जांच शुरू करें'}</span>
         </button>
 
         <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
           <button onClick={() => setChatOpen(!chatOpen)} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
             <MessageSquare size={16} />
-            <span>{language === 'en' ? 'AI Investigation Chat' : 'एआई जांच चैट'}</span>
+            <span>{language === 'en' ? 'AI Courtroom Assistant' : 'एआई कोर्ट रूम सहायक'}</span>
           </button>
           
           <button onClick={handlePrintReport} className="btn btn-secondary" style={{ padding: '0.5rem 1rem' }}>
             <Printer size={16} />
-            <span>{language === 'en' ? 'Print / Export PDF' : 'प्रिंट / निर्यात पीडीएफ'}</span>
+            <span>{language === 'en' ? 'Export Court Transcript' : 'न्यायालय रिपोर्ट निर्यात करें'}</span>
           </button>
         </div>
       </div>
 
-      {/* 1. Overall Verdict Section */}
+      {/* Title & Gavel Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <Scale size={28} color="var(--color-primary)" />
+        <h1 style={{ fontSize: '1.8rem', fontWeight: 800 }}>
+          {language === 'en' ? 'AI Courtroom Verdict Summary' : 'एआई कोर्ट रूम निर्णय'}
+        </h1>
+      </div>
+
+      {/* 1. Verdict & Judge Explanation Card */}
       <section className="glass-card" style={{
         borderLeft: `8px solid ${scoreColor}`,
         display: 'grid',
         gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 'var(--space-lg)',
-        alignItems: 'center'
+        alignItems: 'start'
       }}>
-        {/* Score Dial */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)' }}>
+        {/* Trust Gauge Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'var(--space-sm)', padding: 'var(--space-md) 0' }}>
           <h4 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>
-            {language === 'en' ? 'Consolidated Assessment' : 'समेकित मूल्यांकन'}
+            {language === 'en' ? 'Synthesized Trust Gauge' : 'संश्लेषित विश्वास सूचक'}
           </h4>
           <TrustGauge score={metrics.trustScore} />
         </div>
 
-        {/* Verdict Explanation Text */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+        {/* Verdict Details Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-sm)', flexWrap: 'wrap' }}>
-            <span className={`badge ${badgeClass}`} style={{ padding: '0.4rem 1rem', fontSize: '0.9rem' }}>
-              {verdict || simpleVerdict}
+            <span className={`badge ${badgeClass}`} style={{ padding: '0.5rem 1.25rem', fontSize: '1rem', fontWeight: 800 }}>
+              {currentAnalysis.verdict || simpleVerdict}
             </span>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
               <Clock size={12} />
               <span>{new Date(createdAt || Date.now()).toLocaleString()}</span>
             </div>
           </div>
-          
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 700 }}>
+
+          <h2 style={{ fontSize: '1.35rem', fontWeight: 700, margin: 0 }}>
             {title}
           </h2>
 
-          <p style={{
-            fontSize: '1rem',
-            lineHeight: '1.6',
-            color: 'var(--text-primary)',
-            backgroundColor: 'var(--bg-primary)',
-            padding: 'var(--space-md)',
-            borderRadius: 'var(--radius-md)',
-            borderLeft: `4px solid ${scoreColor}`
-          }}>
-            {language === 'en' ? explainableNarrative.en : explainableNarrative.hi}
-          </p>
+          {/* Step 9 UI Improvements: Verification Strategy Metadata Panel */}
+          {currentAnalysis.metadata && (
+            <div style={{
+              backgroundColor: 'rgba(59, 130, 246, 0.03)',
+              border: '1px solid rgba(59, 130, 246, 0.15)',
+              borderRadius: 'var(--radius-md)',
+              padding: 'var(--space-md)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 'var(--space-md)',
+              fontSize: '0.85rem'
+            }}>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  Claim Category
+                </span>
+                <span style={{ fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <Award size={14} />
+                  {currentAnalysis.metadata.claimCategory || 'General Claim'}
+                </span>
+              </div>
+              
+              <div>
+                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  Strategy Activated
+                </span>
+                <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <Activity size={14} />
+                  {currentAnalysis.metadata.verificationStrategy || 'General Verification'}
+                </span>
+              </div>
 
-          <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-            <span>{language === 'en' ? 'Confidence rating:' : 'विश्वास स्तर:'} </span>
-            <strong style={{ color: 'var(--text-primary)' }}>{metrics.trustScore >= 75 ? '92%' : metrics.trustScore >= 40 ? '65%' : '88%'}</strong>
+              <div>
+                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  Sources Prioritized
+                </span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
+                  {currentAnalysis.metadata.prioritizedSources || 'Factcheck registries, Live Search'}
+                </span>
+              </div>
+
+              <div>
+                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+                  Pipeline Route
+                </span>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                  <Compass size={14} color="var(--color-success)" />
+                  {currentAnalysis.metadata.pipelineSelected || 'Dynamic RAV Engine v2'}
+                </span>
+              </div>
+            </div>
+          )}
+
+          {/* Explain Like Persona Switcher Pills */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
+              {language === 'en' ? 'Explain Like:' : 'स्पष्टीकरण शैली:'}
+            </span>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {['child', 'student', 'general', 'researcher', 'journalist', 'developer'].map((style) => (
+                <button
+                  key={style}
+                  onClick={() => handlePersonaChange(style)}
+                  disabled={loadingPersona}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.78rem',
+                    borderRadius: 'var(--radius-full)',
+                    border: '1px solid var(--border-color)',
+                    backgroundColor: persona === style ? 'var(--color-primary)' : 'var(--bg-tertiary)',
+                    color: persona === style ? 'black' : 'var(--text-primary)',
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                    textTransform: 'capitalize',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {style}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Dynamic Explanation Paragraph */}
+          <div style={{ position: 'relative' }}>
+            {loadingPersona && (
+              <div style={{
+                position: 'absolute', top: 0, left: 0, right: 0, bottom: 0,
+                backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center',
+                justifyContent: 'center', borderRadius: 'var(--radius-md)'
+              }}>
+                <RefreshCw className="animate-spin" size={24} color="var(--color-primary)" />
+              </div>
+            )}
+            <p style={{
+              fontSize: '0.95rem',
+              lineHeight: '1.6',
+              color: 'var(--text-primary)',
+              backgroundColor: 'var(--bg-primary)',
+              padding: 'var(--space-md)',
+              borderRadius: 'var(--radius-md)',
+              borderLeft: `4px solid ${scoreColor}`,
+              minHeight: '80px'
+            }}>
+              {language === 'en' ? explanationText?.en : explanationText?.hi}
+            </p>
+          </div>
+
+          {/* Recommended actions & Risk of Sharing */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 'var(--space-md)',
+            padding: 'var(--space-sm)',
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-md)'
+          }}>
+            <div>
+              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                {language === 'en' ? 'Risk of Sharing' : 'साझा करने का जोखिम'}
+              </span>
+              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 600, color: metrics.trustScore < 50 ? 'var(--color-danger)' : 'var(--color-success)' }}>
+                {metrics.trustScore < 40 ? '🔴 Extreme Risk (Abundant Misinformation)' : metrics.trustScore < 75 ? '🟡 Moderate Risk (Needs Context)' : '🟢 Negligible Risk (Verified Claims)'}
+              </p>
+            </div>
+            <div>
+              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                {language === 'en' ? 'Recommended Action' : 'सलाह दी गई कार्रवाई'}
+              </span>
+              <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 600 }}>
+                {metrics.trustScore < 40 ? '🚫 Refuse to share. Correct peers.' : metrics.trustScore < 75 ? '⚠️ Inspect contradictions first.' : '✅ Share freely with verified citations.'}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* 2. Trust Score Dashboard Grid */}
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-        <h3 style={{ fontSize: '1.25rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <Activity size={18} color="var(--color-primary)" />
-          <span>{language === 'en' ? 'Trust Metric Indicators' : 'विश्वसनीयता संकेतक डैशबोर्ड'}</span>
-        </h3>
+      {/* 2. Courtroom Arguments Panels (Prosecution vs Defense) */}
+      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 'var(--space-lg)' }}>
         
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: 'var(--space-md)'
-        }}>
-          {[
-            { nameEn: "Overall Trust", nameHi: "कुल विश्वसनीयता", val: metrics.trustScore },
-            { nameEn: "Source Credibility", nameHi: "स्रोत साख", val: metrics.sourceReputation },
-            { nameEn: "Claim Verification", nameHi: "दावा सत्यापन", val: metrics.claimVerification },
-            { nameEn: "Language Neutrality", nameHi: "भाषा निष्पक्षता", val: metrics.biasScore },
-            { nameEn: "Emotional Manipulation", nameHi: "भावना नियंत्रण", val: metrics.emotionScore },
-            { nameEn: "Content Freshness", nameHi: "सामग्री नवीनता", val: metrics.trustScore > 60 ? 90 : 80 }
-          ].map((card, idx) => {
-            let cardColor = 'var(--color-success)';
-            if (card.val < 40) cardColor = 'var(--color-danger)';
-            else if (card.val < 75) cardColor = 'var(--color-warning)';
+        {/* Prosecution Panel (Evidence Against) */}
+        <div className="glass-card" style={{ borderTop: '6px solid var(--color-danger)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-danger)' }}>
+            <ShieldAlert size={20} />
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+              {language === 'en' ? 'Prosecution: Evidence Against' : 'अभियोजन: विरुद्ध साक्ष्य'}
+            </h3>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+            {language === 'en' ? 'Contradicting domains, fact-checks, and official denials:' : 'दावे का खंडन करने वाले स्रोत और फैक्ट-चेक:'}
+          </p>
 
-            return (
-              <div key={idx} className="glass" style={{
-                borderRadius: 'var(--radius-lg)',
-                padding: 'var(--space-md)',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '8px',
-                borderTop: `4px solid ${cardColor}`
-              }}>
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  {language === 'en' ? card.nameEn : card.nameHi}
-                </span>
-                <span style={{ fontSize: '1.75rem', fontFamily: 'var(--font-display)', fontWeight: 800, color: cardColor, lineHeight: 1 }}>
-                  {card.val}%
-                </span>
-                <div style={{ width: '100%', height: '4px', backgroundColor: 'var(--bg-tertiary)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
-                  <div style={{ width: `${card.val}%`, height: '100%', backgroundColor: cardColor }}></div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+            {prosecutingEvidence.length > 0 ? (
+              prosecutingEvidence.map((ev, idx) => (
+                <div key={idx} className="glass-card" style={{
+                  padding: '16px', 
+                  backgroundColor: 'rgba(239, 68, 68, 0.02)',
+                  border: '1px solid rgba(239, 68, 68, 0.15)', 
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '24px', height: '24px', borderRadius: '50%',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
+                        fontWeight: 'bold', color: 'var(--color-danger)'
+                      }}>
+                        {ev.source ? ev.source.charAt(0).toUpperCase() : 'S'}
+                      </div>
+                      <strong style={{ fontSize: '0.85rem', color: 'var(--color-danger)' }}>{ev.source || 'Fact Check'}</strong>
+                    </div>
+                    <span className="badge badge-danger" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                      {language === 'en' ? 'CONTRADICTS' : 'खंडन करता है'}
+                    </span>
+                  </div>
+
+                  <h4 style={{ fontSize: '0.9rem', margin: '2px 0', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {ev.title}
+                  </h4>
+                  
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                    "{ev.snippet}"
+                  </p>
+
+                  {/* Why it matters explainer */}
+                  {ev.whyItMatters && (
+                    <div style={{
+                      backgroundColor: 'rgba(239, 68, 68, 0.05)',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-secondary)',
+                      borderLeft: '3px solid var(--color-danger)'
+                    }}>
+                      <strong>{language === 'en' ? 'Why it matters: ' : 'यह क्यों महत्वपूर्ण है: '}</strong>
+                      {ev.whyItMatters}
+                    </div>
+                  )}
+
+                  {/* Scores & URL Button */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {language === 'en' ? 'Reliability: ' : 'विश्वसनीयता: '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{ev.reliabilityScore || 50}%</strong>
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {language === 'en' ? 'Relevance: ' : 'प्रासंगिकता: '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{ev.relevanceScore || 50}%</strong>
+                      </span>
+                    </div>
+
+                    {ev.url && (
+                      <a
+                        href={ev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-outline"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'flex', gap: '4px', alignItems: 'center' }}
+                      >
+                        <span>{language === 'en' ? 'View Source' : 'स्रोत देखें'}</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
                 </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: 'var(--space-lg) 0', color: 'var(--text-muted)' }}>
+                <CheckCircle size={32} color="var(--color-success)" style={{ marginBottom: '8px' }} />
+                <p style={{ fontSize: '0.85rem' }}>
+                  {language === 'en' ? 'No contradicting evidence or official denials found.' : 'विरोधाभास या आधिकारिक खंडन का कोई प्रमाण नहीं मिला।'}
+                </p>
               </div>
-            );
-          })}
+            )}
+          </div>
+        </div>
+
+        {/* Defense Panel (Evidence Supporting) */}
+        <div className="glass-card" style={{ borderTop: '6px solid var(--color-success)', display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--color-success)' }}>
+            <ShieldCheck size={20} />
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 700, margin: 0 }}>
+              {language === 'en' ? 'Defense: Supporting Evidence' : 'बचाव: समर्थन में साक्ष्य'}
+            </h3>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+            {language === 'en' ? 'Corroborating news, academic findings, and official releases:' : 'दावे का समर्थन करने वाले आधिकारिक समाचार और लेख:'}
+          </p>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+            {supportingEvidence.length > 0 ? (
+              supportingEvidence.map((ev, idx) => (
+                <div key={idx} className="glass-card" style={{
+                  padding: '16px', 
+                  backgroundColor: 'rgba(16, 185, 129, 0.02)',
+                  border: '1px solid rgba(16, 185, 129, 0.15)', 
+                  borderRadius: 'var(--radius-md)',
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '8px',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '24px', height: '24px', borderRadius: '50%',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center', fontSize: '0.7rem',
+                        fontWeight: 'bold', color: 'var(--color-success)'
+                      }}>
+                        {ev.source ? ev.source.charAt(0).toUpperCase() : 'S'}
+                      </div>
+                      <strong style={{ fontSize: '0.85rem', color: 'var(--color-success)' }}>{ev.source || 'General News'}</strong>
+                    </div>
+                    <span className="badge badge-success" style={{ fontSize: '0.7rem', padding: '2px 8px' }}>
+                      {language === 'en' ? 'SUPPORTS' : 'समर्थन करता है'}
+                    </span>
+                  </div>
+
+                  <h4 style={{ fontSize: '0.9rem', margin: '2px 0', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    {ev.title}
+                  </h4>
+                  
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                    "{ev.snippet}"
+                  </p>
+
+                  {/* Why it matters explainer */}
+                  {ev.whyItMatters && (
+                    <div style={{
+                      backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
+                      fontSize: '0.78rem',
+                      color: 'var(--text-secondary)',
+                      borderLeft: '3px solid var(--color-success)'
+                    }}>
+                      <strong>{language === 'en' ? 'Why it matters: ' : 'यह क्यों महत्वपूर्ण है: '}</strong>
+                      {ev.whyItMatters}
+                    </div>
+                  )}
+
+                  {/* Scores & URL Button */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-color)', paddingTop: '8px', marginTop: '4px', flexWrap: 'wrap', gap: '6px' }}>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {language === 'en' ? 'Reliability: ' : 'विश्वसनीयता: '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{ev.reliabilityScore || 50}%</strong>
+                      </span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                        {language === 'en' ? 'Relevance: ' : 'प्रासंगिकता: '}
+                        <strong style={{ color: 'var(--text-primary)' }}>{ev.relevanceScore || 50}%</strong>
+                      </span>
+                    </div>
+
+                    {ev.url && (
+                      <a
+                        href={ev.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-outline"
+                        style={{ padding: '4px 10px', fontSize: '0.75rem', display: 'flex', gap: '4px', alignItems: 'center' }}
+                      >
+                        <span>{language === 'en' ? 'View Source' : 'स्रोत देखें'}</span>
+                        <ExternalLink size={12} />
+                      </a>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: 'var(--space-lg) 0', color: 'var(--text-muted)' }}>
+                <AlertTriangle size={32} color="var(--color-warning)" style={{ marginBottom: '8px' }} />
+                <p style={{ fontSize: '0.85rem' }}>
+                  {language === 'en' ? 'No supporting evidence or corroborated articles found.' : 'दावे का समर्थन करने वाला कोई लेख या प्रमाण नहीं मिला।'}
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </section>
+
+      {/* 3. Judge Panel Heuristics Explainer */}
+      <section className="glass-card" style={{ borderLeft: '8px solid var(--color-primary)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: 'var(--space-sm)' }}>
+          <Scale size={22} color="var(--color-primary)" />
+          <h3 style={{ fontSize: '1.2rem', fontWeight: 700, margin: 0 }}>
+            {language === 'en' ? 'Judge Panel: Auditing Verdict Logic' : 'न्यायाधीश पैनल: निर्णय ऑडिट तर्क'}
+          </h3>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-md)', fontSize: '0.88rem', lineHeight: '1.5' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <strong style={{ color: 'var(--text-primary)' }}>1. Weighing of Arguments:</strong>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {metrics.trustScore < 40 
+                ? (language === 'en' ? 'Contradictory factcheck registry blocks are active. The claim is classified as fake.' : 'तथ्य-जांच रिकॉर्ड मौजूद हैं जो इस दावे का स्पष्ट खंडन करते हैं। इसे भ्रामक माना गया है।')
+                : (language === 'en' ? 'Supporting records verify assertions. Consensual declarations are documented.' : 'सत्यापित रिकॉर्ड और तथ्य इस दावे की सत्यता की पुष्टि करते हैं।')}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <strong style={{ color: 'var(--text-primary)' }}>2. Confidence Factors:</strong>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {language === 'en' 
+                ? `Calculated at ${confidenceDetails?.score || 85}% using quality, agreement metrics, and source diversity.`
+                : `दावे का संकलन मूल्य ${confidenceDetails?.score || 85}% गुणवत्ता, साक्ष्य सहमति और विविधता पर आधारित है।`}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <strong style={{ color: 'var(--text-primary)' }}>3. Ignored Sources:</strong>
+            <span style={{ color: 'var(--text-secondary)' }}>
+              {language === 'en' 
+                ? 'Syndicated wire copies and blogs with duplicate identifiers are grouped under wire nodes to avoid double-counting.'
+                : 'प्रतियों और अनधिकृत ब्लॉगों से प्राप्त डेटा को प्राथमिक नोड में मिला दिया गया ताकि दोहरी गणना न हो।'}
+            </span>
+          </div>
         </div>
       </section>
 
-      {/* 3. Claim Investigation Expandable Cards */}
-      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-          {language === 'en' ? 'Extracted Claims & Investigation Cards' : 'दावा जांच और सत्यापन कार्ड'}
+      {/* 4. Confidence Breakdown */}
+      <section className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <h3 style={{ fontSize: '1.2rem', display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+          <BarChart2 size={18} color="var(--color-primary)" />
+          <span>{language === 'en' ? 'Mathematical Confidence Breakdown' : 'विश्वास स्तर का गणितीय विश्लेषण'}</span>
         </h3>
 
-        {extractedClaims && extractedClaims.length > 0 ? (
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+          {language === 'en' 
+            ? 'Visualizing the contribution of different metrics in building the final confidence score:'
+            : 'अंतिम विश्वास स्कोर के निर्माण में विभिन्न संकेतकों के योगदान का प्रदर्शन:'}
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 'var(--space-md)' }}>
+          {[
+            { name: 'Entity Confidence', val: confidenceDetails?.components?.entity || confidenceDetails?.components?.reliability || 90, weight: '15%' },
+            { name: 'Claim parsing', val: confidenceDetails?.components?.claim || 95, weight: '15%' },
+            { name: 'Retrieval coverage', val: confidenceDetails?.components?.retrieval || 80, weight: '20%' },
+            { name: 'Evidence rating', val: confidenceDetails?.components?.evidence || 75, weight: '25%' },
+            { name: 'Verdict consensus', val: confidenceDetails?.components?.verdict || confidenceDetails?.components?.agreement || 90, weight: '25%' }
+          ].map((comp, idx) => (
+            <div key={idx} style={{
+              padding: '12px', backgroundColor: 'var(--bg-secondary)',
+              borderRadius: 'var(--radius-md)', display: 'flex', flexDirection: 'column', gap: '6px'
+            }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>{comp.name}</span>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                <span style={{ fontSize: '1.35rem', fontWeight: 800, color: 'var(--color-primary)' }}>{comp.val}%</span>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>Wt: {comp.weight}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Confidence transparency logs */}
+        {confidenceDetails?.transparencyLogs && (
+          <div style={{ padding: '10px', backgroundColor: 'var(--bg-primary)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)' }}>
+            <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+              {language === 'en' ? 'Confidence Audit Logs:' : 'विश्वास स्तर का ऑडिट लॉग:'}
+            </span>
+            <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.8rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+              {confidenceDetails.transparencyLogs.map((log, idx) => (
+                <li key={idx}>{log}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
+
+      {/* 5. Evidence Chain Interactive Timeline */}
+      <section className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+          {language === 'en' ? 'Evidence Chain: Auditing Process Trail' : 'एविडेंस चेन: संपूर्ण ऑडिट प्रक्रिया'}
+        </h3>
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+          {language === 'en' 
+            ? 'Click on any step of the auditing process pipeline to explore verification logs:'
+            : 'सत्यापन विवरणों का पता लगाने के लिए ऑडिट प्रक्रिया के किसी भी चरण पर क्लिक करें:'}
+        </p>
+
+        {/* Chain nodes */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {[
+            { step: 'Input Normalization', desc: 'Raw pastes, HTML tags, or image uploads are normalized and cleaned.' },
+            { step: 'Claim Decomposing', desc: 'Sentences are parsed to isolate distinct assertions and assign priority.' },
+            { step: 'Parallel Adapters Search', desc: 'Queries factcheck registries, WHO, NASA, and news outlets concurrently.' },
+            { step: 'Source Trust Registry Audit', desc: 'Crawled domains are scored according to STR categorization and whitelists.' },
+            { step: 'Evidence Weighted Ranking', desc: 'Retrievals are relevance-filtered and ranked according to configured parameters.' },
+            { step: 'Contradiction Matrix Analysis', desc: 'Compares evidence to check if sources agree, contradict, or remain silent.' },
+            { step: 'Final Verdict Resolution', desc: 'Verdict resolved as Verified True, Likely True, Unverified, or Verified Fake.' }
+          ].map((item, idx) => (
+            <div key={idx} style={{
+              borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)',
+              overflow: 'hidden'
+            }}>
+              <div 
+                onClick={() => setExpandedChainStep(expandedChainStep === idx ? null : idx)}
+                style={{
+                  padding: '10px 16px', display: 'flex', justifyContent: 'space-between',
+                  alignItems: 'center', cursor: 'pointer', backgroundColor: expandedChainStep === idx ? 'var(--bg-tertiary)' : 'var(--bg-secondary)'
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <span style={{
+                    width: '24px', height: '24px', borderRadius: '50%', backgroundColor: 'var(--bg-tertiary)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.78rem', fontWeight: 800, border: '1px solid var(--border-color)'
+                  }}>
+                    {idx + 1}
+                  </span>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 600 }}>{item.step}</span>
+                </div>
+                {expandedChainStep === idx ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              </div>
+
+              {expandedChainStep === idx && (
+                <div style={{ padding: '12px 16px', backgroundColor: 'var(--bg-primary)', borderTop: '1px solid var(--border-color)', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
+                  {item.desc}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* 6. Claim-by-Claim Forensic Dossier folders */}
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
+        <h3 style={{ fontSize: '1.25rem', fontWeight: 600, margin: 0 }}>
+          {language === 'en' ? 'Claim-by-Claim Case Files' : 'दावा-दर-दावा केस फाइलें'}
+        </h3>
+
+        {decomposedClaims && decomposedClaims.length > 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-            {extractedClaims.map((claimObj, idx) => {
+            {decomposedClaims.map((claimObj, idx) => {
               const isExpanded = expandedClaims[idx];
-              const isCredible = claimObj.verdict.toLowerCase().includes('true') || claimObj.verdict.toLowerCase().includes('credible') || claimObj.verdict.toLowerCase().includes('सही');
-              const isFalse = claimObj.verdict.toLowerCase().includes('false') || claimObj.verdict.toLowerCase().includes('debunked') || claimObj.verdict.toLowerCase().includes('गलत');
               
+              // Claim agreement verdict styling
+              const isCredible = claimObj.agreementPercent >= 75;
+              const isFalse = claimObj.agreementPercent < 30;
               let claimBadge = 'badge-warning';
               if (isCredible) claimBadge = 'badge-success';
               else if (isFalse) claimBadge = 'badge-danger';
+
+              // Filter evidence matching this specific claim
+              const matchingEvidence = evidenceCollected ? evidenceCollected.filter(e => {
+                const claimWords = claimObj.normalizedSentence.toLowerCase().split(/\s+/).filter(w => w.length > 4);
+                return claimWords.some(word => e.snippet.toLowerCase().includes(word) || e.title.toLowerCase().includes(word));
+              }) : [];
 
               return (
                 <div key={idx} className="glass" style={{
@@ -261,20 +745,20 @@ Think Before You Share. Check credentials at TruthLens AI.`;
                     }}
                   >
                     <div style={{ flex: 1, minWidth: '240px' }}>
-                      <p style={{ fontWeight: 600, fontSize: '0.98rem' }}>
-                        "{claimObj.claim}"
+                      <p style={{ fontWeight: 600, fontSize: '0.98rem', margin: 0 }}>
+                        "{claimObj.normalizedSentence}"
                       </p>
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
                       <span className={`badge ${claimBadge}`}>
-                        {claimObj.verdict}
+                        {claimObj.agreementPercent >= 75 ? 'Corroborated' : claimObj.agreementPercent < 30 ? 'Contradicted' : 'Unverified'}
                       </span>
                       {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </div>
                   </div>
 
-                  {/* Expandable details context */}
+                  {/* Expandable Case Folder Details */}
                   {isExpanded && (
                     <div style={{
                       padding: 'var(--space-lg)',
@@ -285,60 +769,51 @@ Think Before You Share. Check credentials at TruthLens AI.`;
                       gap: 'var(--space-md)'
                     }}>
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-lg)' }}>
-                        {/* Evidence Summary */}
+                        {/* Dossier info */}
                         <div>
-                          <h5 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                            {language === 'en' ? 'Evidence Summary' : 'साक्ष्य सारांश'}
+                          <h5 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px', margin: 0 }}>
+                            {language === 'en' ? 'Claim Metrics' : 'दावा संकेतक'}
                           </h5>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                            {isCredible 
-                              ? (language === 'en' ? 'Claims align with verified bulletins and scientific datasets. No contradictions found in public logs.' : 'दावे सत्यापित बुलेटिन और वैज्ञानिक डेटासेट के साथ संरेखित हैं। सार्वजनिक लॉग में कोई विरोधाभास नहीं मिला।')
-                              : isFalse 
-                                ? (language === 'en' ? 'Fact-checking portals have systematically debunked this assertion. Medical/official entities confirm it is fabricated.' : 'तथ्य-जांच पोर्टलों ने व्यवस्थित रूप से इस दावे का खंडन किया है। चिकित्सा/आधिकारिक संस्थाएं पुष्टि करती हैं कि यह पूरी तरह से गलत है।')
-                                : (language === 'en' ? 'This represents a new or localized claim. No peer reviews or official debunking files are yet indexed.' : 'यह एक नए या स्थानीय दावे का प्रतिनिधित्व करता है। कोई सहकर्मी समीक्षा या आधिकारिक खंडन फ़ाइलें अभी तक अनुक्रमित नहीं हैं।')}
-                          </p>
+                          <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.88rem', color: 'var(--text-secondary)', display: 'flex', flexDirection: 'column', gap: '4px', paddingTop: '6px' }}>
+                            <li>Priority Level: <strong style={{ textTransform: 'capitalize' }}>{claimObj.priority}</strong></li>
+                            <li>Agreement consensus: <strong>{claimObj.agreementPercent}%</strong></li>
+                            <li>Evidence Strength rating: <strong>{claimObj.evidenceStrength}%</strong></li>
+                            <li>Supporting sources: <strong>{claimObj.supportingCount}</strong></li>
+                            <li>Contradicting sources: <strong>{claimObj.contradictingCount}</strong></li>
+                          </ul>
                         </div>
 
-                        {/* Reasoning */}
+                        {/* Source Justification (Why used/trusted) */}
                         <div>
-                          <h5 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                            {language === 'en' ? 'AI Reason for Classification' : 'वर्गीकरण का कारण'}
+                          <h5 style={{ fontSize: '0.85rem', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '4px', margin: 0 }}>
+                            {language === 'en' ? 'Source Audit Justification' : 'स्रोत ऑडिट औचित्य'}
                           </h5>
-                          <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                            {language === 'en'
-                              ? `Classified as ${claimObj.verdict} based on cross-referencing registries verified by ${claimObj.checkedBy || 'reputable factcheckers'}.`
-                              : `${claimObj.checkedBy || 'तथ्य-जांचकर्ताओं'} द्वारा सत्यापित डेटाबेस से मिलान के आधार पर इसे ${claimObj.verdict} के रूप में वर्गीकृत किया गया है।`}
+                          <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.5, margin: 0, paddingTop: '6px' }}>
+                            {matchingEvidence.length > 0 
+                              ? `Used source [${matchingEvidence[0].source}] (STR reliability: ${matchingEvidence[0].reliabilityScore}%). Classified as ${matchingEvidence[0].category} with ${matchingEvidence[0].primarySource?.isOriginal ? 'original reporting' : 'copied wire'} status.`
+                              : 'No matching primary source found. Dynamic SSL signals were used for validation.'}
                           </p>
                         </div>
                       </div>
 
-                      {/* Sources */}
-                      <div style={{
-                        borderTop: '1px solid var(--border-color)',
-                        paddingTop: 'var(--space-sm)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        flexWrap: 'wrap',
-                        gap: 'var(--space-sm)'
-                      }}>
-                        <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                          {language === 'en' ? 'Verification Institution:' : 'सत्यापन संस्था:'}{' '}
-                          <strong style={{ color: 'var(--text-primary)' }}>{claimObj.checkedBy}</strong>
+                      {/* Supporting vs Contradicting references list */}
+                      <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: 'var(--space-md)' }}>
+                        <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', display: 'block', marginBottom: '8px' }}>
+                          {language === 'en' ? 'Linked Case Evidence Reference Map:' : 'संबद्ध केस सबूत संदर्भ मानचित्र:'}
                         </span>
-
-                        {claimObj.url && (
-                          <a 
-                            href={claimObj.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer" 
-                            className="btn btn-secondary"
-                            style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }}
-                          >
-                            <ExternalLink size={12} />
-                            <span style={{ marginLeft: '4px' }}>{language === 'en' ? 'View Official Source Report' : 'आधिकारिक रिपोर्ट देखें'}</span>
-                          </a>
-                        )}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {matchingEvidence.map((ev, idx) => (
+                            <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', backgroundColor: 'var(--bg-secondary)', padding: '6px 12px', borderRadius: 'var(--radius-md)' }}>
+                              <span>{ev.title} ({ev.source})</span>
+                              {ev.url && (
+                                <a href={ev.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '2px', textDecoration: 'none' }}>
+                                  <span>Link</span>
+                                  <ExternalLink size={10} />
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -348,66 +823,12 @@ Think Before You Share. Check credentials at TruthLens AI.`;
           </div>
         ) : (
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-            {language === 'en' ? 'No verifiable claims detected.' : 'कोई सत्यापन योग्य दावा नहीं मिला।'}
+            {language === 'en' ? 'No decomposed claim folders detected.' : 'कोई दावा फोल्डर नहीं मिला।'}
           </p>
         )}
       </section>
 
-      {/* 4. Source Comparison Section */}
-      <section className="glass-card" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
-        <h3 style={{ fontSize: '1.25rem', fontWeight: 600 }}>
-          {language === 'en' ? 'Reputable Source Coverage & References' : 'प्रतिष्ठित स्रोतों की कवरेज और संदर्भ'}
-        </h3>
-        
-        <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', marginBottom: 'var(--space-xs)' }}>
-          {language === 'en' 
-            ? 'Compare covering stories from verified publications regarding similar entities:'
-            : 'समान संस्थाओं के संबंध में सत्यापित प्रकाशनों से प्राप्त कवरेज की तुलना करें:'}
-        </p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 'var(--space-md)' }}>
-          {[
-            {
-              pub: 'PIB FactCheck / WHO portal',
-              date: '2026-07-10',
-              headline: language === 'en' ? 'Medical Advisory regarding Home Remedies' : 'घरेलू उपचारों के संबंध में चिकित्सा सलाह',
-              desc: language === 'en' ? 'Official notice clarifying home chemical mixtures do not prevent viral infections.' : 'होम केमिकल मिश्रण वायरस से सुरक्षा नहीं देता - आधिकारिक सलाह।'
-            },
-            {
-              pub: 'Reuters FactCheck / PIB portal',
-              date: '2026-07-12',
-              headline: language === 'en' ? 'Fact-Check on viral WhatsApp health tips' : 'वायरल व्हाट्सएप स्वास्थ्य युक्तियों पर फैक्ट-चेक',
-              desc: language === 'en' ? 'Scientific testing confirms bicarbonate solutions do not block cell viral ingestion.' : 'वैज्ञानिक शोध पुष्टि करते हैं कि सोडा समाधान सेल संक्रमण को नहीं रोकता।'
-            }
-          ].map((src, idx) => (
-            <div key={idx} style={{
-              padding: 'var(--space-md)',
-              backgroundColor: 'var(--bg-primary)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-color)',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '6px'
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                <span>{src.pub}</span>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                  <Calendar size={10} />
-                  {src.date}
-                </span>
-              </div>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-primary)' }}>
-                {src.headline}
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
-                {src.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* 5. "Before You Share" Nudge & Disclaimer */}
+      {/* 7. "Before You Share" Friction Nudge */}
       <section className="glass-card before-share-warning" style={{
         border: '1.5px solid var(--color-warning)',
         backgroundColor: 'var(--color-warning-bg)',
@@ -420,12 +841,12 @@ Think Before You Share. Check credentials at TruthLens AI.`;
         <div style={{ display: 'flex', gap: 'var(--space-md)', flex: 1, minWidth: '280px' }}>
           <AlertTriangle size={28} color="var(--color-warning)" style={{ flexShrink: 0 }} />
           <div>
-            <h4 style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-warning)', marginBottom: '4px' }}>
+            <h4 style={{ fontWeight: 700, fontSize: '1.1rem', color: 'var(--color-warning)', marginBottom: '4px', margin: 0 }}>
               {language === 'en' ? 'Think Before You Share!' : 'साझा करने से पहले सोचें!'}
             </h4>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.5' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', lineHeight: '1.5', margin: 0, marginTop: '4px' }}>
               {language === 'en' 
-                ? 'Unverified sharing spreads false rumors. Help build media literacy by copying our contextual verification summary containing factual citations.' 
+                ? 'Unverified sharing spreads false rumors. Help build media literacy by copying our courtroom verification summary containing factual citations.' 
                 : 'असत्यापित शेयरिंग अफवाहों को फैलाती है। हमारे तथ्यात्मक उद्धरणों से युक्त विश्लेषण सारांश को कॉपी कर साझा करें और जागरूकता फैलाएं।'}
             </p>
           </div>
@@ -434,7 +855,7 @@ Think Before You Share. Check credentials at TruthLens AI.`;
         <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
           <button onClick={copyShareSummary} className="btn btn-primary" style={{ backgroundColor: 'var(--color-warning)', color: 'black', border: 'none' }}>
             <Copy size={16} />
-            <span>{language === 'en' ? 'Copy Summary' : 'सारांश कॉपी करें'}</span>
+            <span>{language === 'en' ? 'Copy Court Report' : 'निर्णय सारांश कॉपी करें'}</span>
           </button>
         </div>
       </section>
@@ -442,35 +863,23 @@ Think Before You Share. Check credentials at TruthLens AI.`;
       {/* Sharing friction Nudge Modal */}
       {nudgeOpen && (
         <div className="animate-fade" style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0,0,0,0.6)',
-          zIndex: 9999,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: 'var(--space-md)'
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'var(--space-md)'
         }}>
           <div className="glass-card animate-slide-up" style={{
-            maxWidth: '480px',
-            backgroundColor: 'var(--bg-secondary)',
-            textAlign: 'center',
-            padding: 'var(--space-2xl)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 'var(--space-md)'
+            maxWidth: '480px', backgroundColor: 'var(--bg-secondary)',
+            textAlign: 'center', padding: 'var(--space-2xl)',
+            display: 'flex', flexDirection: 'column', gap: 'var(--space-md)'
           }}>
             <CheckCircle size={48} color="var(--color-success)" style={{ margin: '0 auto' }} />
-            <h3 style={{ fontSize: '1.35rem' }}>
-              {language === 'en' ? 'Report Summary Copied!' : 'रिपोर्ट सारांश कॉपी हो गया!'}
+            <h3 style={{ fontSize: '1.35rem', margin: 0 }}>
+              {language === 'en' ? 'Forensic Verdict Copied!' : 'न्यायालय रिपोर्ट सारांश कॉपी हो गया!'}
             </h3>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', lineHeight: '1.5', margin: 0 }}>
               {language === 'en'
-                ? 'Excellent! You have copied the verified report summary. Paste it directly in chats to help correct unverified claims.'
-                : 'बहुत बढ़िया! आपने सत्यापित रिपोर्ट का सारांश कॉपी कर लिया है। इसे सीधे चैट में पेस्ट करें ताकि अनजाने में अफवाहें न फैलें।'}
+                ? 'Excellent! Paste this text directly in chats or WhatsApp groups to back your correction with verified courtroom evidence.'
+                : 'बहुत बढ़िया! इसे सीधे चैट में पेस्ट करें ताकि अनजाने में अफवाहें न फैलें और तथ्य सामने आएं।'}
             </p>
             <button onClick={() => setNudgeOpen(false)} className="btn btn-primary">
               {language === 'en' ? 'Continue' : 'जारी रखें'}

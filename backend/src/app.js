@@ -12,6 +12,7 @@ const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const healthRoutes = require('./routes/healthRoutes');
 
 // Middleware Imports
 const { apiLimiter } = require('./middleware/rateLimiter');
@@ -61,20 +62,8 @@ app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/analysis', analysisRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
-// Health Check Endpoint
-app.get('/api/v1/health', (req, res) => {
-  const dbStatus = mongoose.connection.readyState;
-  // readyState codes: 0 = disconnected, 1 = connected, 2 = connecting, 3 = disconnecting
-  const dbStates = ['disconnected', 'connected', 'connecting', 'disconnecting'];
-  
-  res.status(200).json({
-    success: true,
-    message: 'TruthLens AI API Gateway is active and healthy.',
-    environment: process.env.NODE_ENV || 'production',
-    database: dbStates[dbStatus] || 'unknown',
-    timestamp: new Date().toISOString()
-  });
-});
+// Telemetry & Health Check Router
+app.use('/api/v1/health', healthRoutes);
 
 // Root path handler redirecting to health check
 app.get('/', (req, res) => {

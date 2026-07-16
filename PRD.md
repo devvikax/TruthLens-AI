@@ -1,243 +1,188 @@
 # Product Requirements Document (PRD)
 
-## TruthLens AI
-*Tagline: Think Before You Share.*
+## VeriLens AI - Multimodal AI Claim Verification & Investigation Lab
+*Tagline: Verify Any Claim. Trust Every Verdict.*
 
 ---
 
 ## 1. Executive Summary & Foundations
 
 ### 1.1 Product Vision
-To cultivate a critical-thinking digital society where information sharing is guided by reflection, awareness, and verification. **TruthLens AI** is not merely a tool for labeling content as "true" or "false"; it is a cognitive assistant designed to help users pause, evaluate *why* content might be misleading, and understand the rhetorical and factual elements of media before they propagate it.
+To transform how information is audited in the digital age. **VeriLens AI** is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an AI forensic workspace, it never immediately produces a monolithic verdict. Instead, it systematically investigates content step-by-step—mirroring a human fact-checker—and populates an interactive **Investigation Board** containing claim dossiers, Trust DNA indicators, and source credibility explorers.
 
 ### 1.2 Mission Statement
-Our mission is to democratize media literacy by providing an accessible, transparent, and explainable content analysis engine. We aim to equip users of all ages and backgrounds with the insights needed to identify bias, emotional manipulation, and factual discrepancies in digital media.
+Our mission is to democratize digital forensics by providing a transparent, evidence-based claim verification framework. We replace raw binary verdicts with granular, forensic-style timelines and source cross-examinations, empowering citizens to inspect the exact evidentiary DNA of any media before sharing it.
 
 ### 1.3 Problem Statement
-The digital information ecosystem is saturated with misinformation, clickbait, and emotionally charged fabrications designed to go viral. Traditional fact-checking platforms suffer from several limitations:
-1. **Binary Verdicts**: Labeling content simply as "Fake" or "Real" creates polarization and ignores nuances like out-of-context facts or cherry-picked data.
-2. **Lack of Explanation**: Users are told *what* to believe but not *why*, failing to build long-term media literacy.
-3. **High Cognitive Barriers**: Fact-checking sites are often text-heavy, academic, and difficult for non-technical, younger, or elderly users to navigate.
-4. **Frictionless Sharing**: Modern platforms enable instantaneous sharing of unverified claims, bypassing critical cognitive checks.
+Monolithic "fake news" detectors fail modern media:
+1.  **Immediate Verdict Bias**: Telling a user something is "Fake" immediately triggers political defensiveness. Allowing users to follow the step-by-step investigation journey establishes credibility.
+2.  **No Evidentiary Tracking**: Users are shown verdicts without seeing what evidence supported it, what was missing, or what contradicted it.
+3.  **Lack of Source Accountability**: There is no easy way to explore who reported a claim originally versus who syndicated or copied it.
 
 ---
 
-## 2. Target Audience & User Personas
+## 2. Core Product Principles
 
-### 2.1 Target Users
-*   **The Family Networker**: Active on messaging apps (e.g., WhatsApp, Telegram), frequently receiving and forwarding posts.
-*   **Students & Young Learners**: Using social media (e.g., Instagram, X, YouTube) for research and daily consumption, needing to develop digital literacy.
-*   **Active Citizens & Content Consumers**: Individuals seeking to verify news stories before referencing them in discussions or social posts.
-*   **Elderly Users**: Frequently targeted by scams, misleading health tips, and politically charged misinformation, needing high-contrast, large-text, simple interfaces.
-
-### 2.2 User Personas
-
-#### Persona A: Ramesh (62, Retired Bank Manager)
-*   **Bio**: Ramesh lives in Indore, India. He spends 3–4 hours daily on his smartphone, primarily using WhatsApp and Facebook to connect with friends and family.
-*   **Pain Points**: Struggles with small text fonts, complex navigations, and English-only platforms. Often forwards health remedies and emotional news updates to family groups without knowing how to check if they are genuine. He feels anxious about spreading false news but lacks the tools to verify them easily.
-*   **Goals**: A simple way to paste a message or upload a screenshot (often in Hindi or Hinglish) and get an immediate, easy-to-read explanation in Hindi.
-
-#### Persona B: Aisha (19, Undergraduate Journalism Student)
-*   **Bio**: Aisha lives in Delhi. She uses social media for news gathering and writes articles for her college magazine.
-*   **Pain Points**: Needs rapid verification of claims, source analysis, and a structured breakdown of logical fallacies or emotional bias. Finding sources and citations takes too long.
-*   **Goals**: Wants a "Deep Analysis" mode that crawls trusted databases, extracts claims, detects emotional manipulation, and generates downloadable reports with citations to cross-reference quickly.
+1.  **Investigation Over Monolithic Verdicts**: The platform behaves like an investigator, presenting sequential evidence tracking before resolving verdicts.
+2.  **Multidimensional Trust DNA**: Credibility is evaluated across 9 specific vectors, replacing flat scores with a visual "DNA map".
+3.  **Granular Claim Dossiers**: Every assertion extracted from text or video transcripts becomes an independent case file containing source statistics, contradiction matrices, and coverage audits.
 
 ---
 
-## 3. Success Metrics (KPIs)
+## 3. Detailed Input Pipelines
 
-*   **User Engagement**: Average duration of active analysis sessions; percentage of analyses completed.
-*   **Nudge Effectiveness**: Rate of "Before You Share" interactions (users who copy the shareable summary instead of direct copy-pasting the original unverified claim; users who pause on the sharing confirmation).
-*   **Accuracy & Trust**: Ratio of verified cross-references; user feedback score on explanation clarity (target: >85% satisfaction).
-*   **System Performance**: Average response time for "Quick Check" (target: <3 seconds) and "Deep Analysis" (target: <10 seconds).
-*   **Accessibility Adherence**: 100% WCAG 2.1 AA compliance across all components.
+### 3.1 Plain Text & Articles
+`Text/URL → HTML Cleanup → Claim Extraction → Independent Verification → Verdict`
 
----
+### 3.2 Images & Screenshots
+`Image/Screenshot → Preprocessing (Binarization, Thresholding) → OCR Engine → Extracted Text → Claim Extraction → Independent Verification → Verdict`
 
-## 4. Analysis Modes
+### 3.3 Documents (PDFs)
+`PDF File → Text Layer Extraction → Formatted Text → Claim Extraction → Independent Verification → Verdict`
 
-TruthLens AI supports two primary analysis modes tailored to user intent and cognitive load.
-
-```
-                  +-----------------------------------+
-                  |        User Inputs Content        |
-                  +-----------------------------------+
-                                    |
-                  +-----------------+-----------------+
-                  |                                   |
-                  v                                   v
-      +-----------------------+           +-----------------------+
-      |      Quick Check      |           |     Deep Analysis     |
-      |   (Immediate Nudge)   |           |  (Comprehensive Check)|
-      +-----------------------+           +-----------------------+
-      | * Fast API Pipeline   |           | * Deep NLP Pipelines  |
-      | * High-Level Bias     |           | * Multi-Source Check  |
-      | * Core Trust Meter    |           | * Bias & Manipulation |
-      | * Verdict/Nudge       |           | * Fact Citations      |
-      | * 2-3 Sentences Expl. |           | * Downloadable Report |
-      +-----------------------+           +-----------------------+
-```
-
-### 4.1 Quick Check Mode (Default)
-*   **Purpose**: Immediate evaluation for users in a rush.
-*   **Input Types**: Manual Text, URLs, Social Media Posts.
-*   **Outputs**:
-    *   **Trust Meter**: A visual gauge ranging from 0 to 100 with distinct zones (Credible, Caution, High Risk).
-    *   **Primary Flag**: (e.g., "Credible Source", "Biased Language Detected", "Unverified Claim").
-    *   **One-Sentence Explanation**: Under 25 words, written in simple, non-academic language.
-    *   **Friction Nudge**: A call-to-action button (e.g., "Analyze Deeper" or "Think Before You Share").
-
-### 4.2 Deep Analysis Mode
-*   **Purpose**: Thorough investigation for critical claims, documents, and visual evidence.
-*   **Input Types**: Screenshots, PDFs, News Articles, URLs, and Manual Text.
-*   **Outputs**:
-    *   **Multi-Dimensional Score**: Breaking down Trust into Source Credibility, Emotional Bias, Logical Coherence, and Cross-Reference status.
-    *   **Language & Text Extraction Logs**: Summary of the extracted text (from OCR/PDF).
-    *   **Emotional & Rhetorical Manipulation Engine**: Highlights specific sentences utilizing fear, urgency, or anger.
-    *   **Entity & Claim Extraction**: List of major assertions found in the content.
-    *   **Cross-Referenced Sources Table**: Clickable citations pointing to verified fact-checking platforms (e.g., Alt News, Boom Live, PIB Fact Check, Snopes, PolitiFact) and high-credibility news outlets.
-    *   **Explainable Verdict (Explainable AI)**: A structured breakdown of *why* the trust score was assigned, summarizing findings in bullet points.
-    *   **Exportable PDF Report**: Clear, printable document detailing the analysis for offline sharing.
+### 3.4 Video Processing (YouTube, Reels, X, Local Uploads)
+`Video → Audio Demuxing → Speech-to-Text (Whisper API/Mock) + Frame Sampling (keyframes every 3s) → Frame OCR → Merged Transcript (Transcript Text + Screen Text mapped to Timestamps) → Claim Extraction → Independent Verification → Verdict`
 
 ---
 
-## 5. Functional Requirements
+## 4. Key Functional Requirements (FRs)
 
-### 5.1 Content Input & Extraction
-*   **FR-1.1**: The system must accept raw text inputs up to 10,000 characters.
-*   **FR-1.2**: The system must accept URLs and scrape the primary article content, discarding boilerplate elements like navigation, ads, and footers.
-*   **FR-1.3**: The system must accept image uploads (PNG, JPEG, WebP) representing screenshots of social media posts (X, Facebook, WhatsApp, Instagram).
-*   **FR-1.4**: The system must support PDF uploads up to 10MB and extract text from native text layers.
-*   **FR-1.5**: The system must execute OCR on screenshots, converting low-resolution or skewed text into clean digital characters.
+### 4.1 Input Ingestion & Processing
+*   **FR-1.1**: The system must support text pastes, URLs, screenshots (PNG, JPG, WebP), PDFs, and videos (YouTube links, Reels, X links, MP4 uploads).
+*   **FR-1.2**: For videos, the system must demux audio, run speech recognition, sample key video frames, extract text via OCR, and merge them into a unified transcript with preserved timestamps.
 
-### 5.2 Core Analysis Engine (NLP & AI Pipeline)
-*   **FR-2.1**: The system must detect the primary language of the text.
-*   **FR-2.2**: The system must support bilingual analysis, handling **English** and **Hindi** inputs, with cross-translation for cross-referencing global databases.
-*   **FR-2.3**: The system must identify key entities (People, Organizations, Locations) and claims (factual statements that can be verified).
-*   **FR-2.4**: The system must analyze tone, classifying text based on emotional indicators (e.g., Fear, Anger, Sarcasm, Sensationalism, Neutral).
-*   **FR-2.5**: The system must calculate a numeric **Trust Score (0-100)** based on weighted parameters.
-*   **FR-2.6**: The system must query trusted fact-checking databases and search indices to find matching or refuting stories.
+### 4.2 Claim Decomposition & NER
+*   **FR-2.1**: The engine must parse the cleaned transcript/text and split it into distinct claims.
+*   **FR-2.2**: Each claim must receive a Unique ID, Original Text, Normalized Text, Timestamp (if from video), Priority (high/medium/low), Entities list, and Confidence rating.
 
-### 5.3 User Interaction & Account System
-*   **FR-3.1**: The system must allow complete analysis functionality to Guest users without requiring registration.
-*   **FR-3.2**: The system must provide an optional user signup/login (OAuth/Email) to save historical analyses.
-*   **FR-3.3**: The system must allow logged-in users to view their history, categorize past analyses, and export cumulative reports.
-*   **FR-3.4**: The system must feature an interactive AI Chat sidebar in Deep Analysis, enabling users to ask follow-up questions about the analysis (e.g., *"What is the context of this quote?"*).
+### 4.3 Multi-Source Evidence Collector
+*   **FR-3.1**: The collector must query fact-check registries, Wikipedia, and live search engines in parallel for every claim.
+*   **FR-3.2**: Domain sources must be evaluated dynamically: government and academic sources are assigned higher reliability weights, while unverified forums are penalized.
 
-### 5.4 "Before You Share" Friction Feature
-*   **FR-4.1**: When a user attempts to copy text from a flagged analysis or clicks "Share", the system must display an overlay modal asking: *"Are you sure you want to share this unverified claim?"*
-*   **FR-4.2**: The modal must display a "Share Contextual Summary" option, letting the user share a consolidated text block that contains the trust score, the flagged claim, and the fact-check link, promoting healthy sharing habits.
+### 4.4 Redesigned Results Page & Investigation Widgets
+*   **FR-4.1 (Interactive Timeline)**: For videos, display a visual timeline (e.g., `00:45 - Verified True`, `01:52 - Verified Fake`). Clicking a timeline card must seek the video player to that exact timestamp.
+*   **FR-4.2 (Interactive Evidence Graph)**: Display an interactive graph tracing the relationship between claims, supporting/contradicting sources, fact-check matches, and the final verdict.
+*   **FR-4.3 (Live Verification Journey)**: Show an animated step-by-step log of the AI's reasoning phases (e.g. `Uploading...` → `Extracting Audio...` → `Claim Decomposition...` → `Consensus Search...` → `Verdict Resolved`) during analysis.
+*   **FR-4.4 (AI Explainer Hub)**: An interactive chat sidebar allowing users to query evidence, ask follow-up questions, or translate the report into English/Hindi. The AI only summarizes and explains, rather than deciding truth itself.
+
+### 4.5 Forensic PDF Report Exports
+*   **FR-5.1**: Users can download a structured print report containing the Content Summary, Video Transcript (with timestamps if applicable), Claims Table, Contradiction Analysis, badges, and sharing advice.
 
 ---
 
-## 6. AI & NLP Pipeline Specifications
+## 5. Non-Functional Requirements (NFRs)
 
-### 6.1 NLP Pipeline Flow
-
-```
-+---------------+      +--------------------+      +--------------------+
-| Input Content | ---> | Language Detection | ---> | Translation Engine |
-+---------------+      +--------------------+      +--------------------+
-                                                            |
-                                                            v
-+-----------------------+      +--------------------+      +--------------------+
-|  Bias & Tone Check    | <--- |  Claim Extraction  | <--- | Entity Recognition |
-+-----------------------+      +--------------------+      +--------------------+
-            |
-            v
-+-----------------------+      +--------------------+      +--------------------+
-| Cross-Reference Search| ---> | Score Calculation  | ---> |  Explainable Nudge |
-+-----------------------+      +--------------------+      +--------------------+
-```
-
-1.  **Language Detection**: Analyzes text block. If language is Hindi (or Hinglish), routes to specific models or uses high-fidelity translation wrappers.
-2.  **Entity & Claim Extraction**: Employs Named Entity Recognition (NER) to pull key actors and extract core assertions (e.g., *"COVID-19 vaccine contains microchips"*).
-3.  **Tone & Emotional Manipulation Detection**: Flags linguistic tricks, hyperbole, and emotional cues designed to trigger sharing (e.g., *"MUST SHARE BEFORE IT GETS DELETED!!!"*).
-4.  **Cross-Referencing**: Searches indexed repositories of verified fact-checks and trusted media outlets using extracted entity-claim pairs.
-5.  **Explainable AI (XAI) Synthesis**: Converts system variables (scores, citations, emotional flags) into a narrative structured for children and elderly users.
-
-### 6.2 Trust Score Logic (High Level)
-The overall Trust Score ($S_{trust}$) is calculated using a weighted system of four key metrics:
-
-\[S_{trust} = w_1 \cdot C_{source} + w_2 \cdot B_{tone} + w_3 \cdot V_{claims} + w_4 \cdot E_{context}\]
-
-Where:
-*   $C_{source}$ (Source Reputation): Matches the URL or entity against a whitelist of verified outlets (100) or known misinformation domains (0).
-*   $B_{tone}$ (Bias and Tone): Scoring based on the presence of sensationalism, logical fallacies, and high-intensity emotional triggers (Neutral/Informative = 100, Extreme Rage/Sensationalism = 0).
-*   $V_{claims}$ (Claim Verification): Scoring based on whether fact-checking databases have analyzed this claim (Verified True = 100, Disputed = 50, Debunked = 0). If no direct match is found, queries high-authority secondary sources.
-*   $E_{context}$ (Context & Coherence): Consistency check of dates, image metadata (if available), and surrounding text.
-*   **Weights**: $w_1 = 0.25, w_2 = 0.20, w_3 = 0.45, w_4 = 0.10$.
-
-### 6.3 OCR Support & Scraper Strategy
-*   **OCR**: Standardize preprocessing (greyscale conversion, thresholding, deskewing) on incoming screenshots before running OCR to handle low-light or low-quality mobile uploads.
-*   **Scraper**: Employs headless browsing or reading proxies to fetch URL bodies, stripping CSS/JS/Tracking parameters to isolate news body text.
+*   **NFR-1 (Accessibility)**: Conform to WCAG 2.1 AA. Screen readers must be able to read timeline steps. All interactive buttons must have target sizes $\ge 48\text{px}$.
+*   **NFR-2 (Performance)**: Video transcript preprocessing must run asynchronously with progressive feedback logs sent to the client to keep perceived latency low.
+*   **NFR-3 (Bilingualism)**: Support English and Hindi toggles across the entire results layout and reports.
 
 ---
 
-## 7. Design & UI/UX Philosophy
+## 6. Source Trust Registry & Backend Intelligence Requirements
 
-### 7.1 UX Principles
-1.  **Safety First**: Avoid aggressive red warnings that spark panic. Use descriptive, calm indicators (e.g., HSL-based warnings: Warm Amber for Caution, Slate for Neutral, Deep Jade for Verified).
-2.  **No Placeholders**: Every element must contain realistic mock data during testing to represent real-life utility.
-3.  **Maximum Accessibility**: Text sizing, tap target spacing (>48px), and layout structures must fully support screen readers and users with hand tremors.
-4.  **Explainability Over Verdicts**: Instead of displaying "FAKE NEWS", the UI lists the findings: *"This image was taken in 2018, not last week,"* or *"The headline matches, but the text is misleading."*
+### 6.1 Source Trust Registry (STR)
+The backend must support an internal Source Trust Registry storing:
+*   Domain Name, Category (Government, Academic, Regional, International, Independent Blog).
+*   Official Status (Boolean), known reliability (0-100), and verification methods.
 
-### 7.2 Interface Layout (Mobile-First)
-*   **Home Screen**: Features a large, friendly search bar or upload box. One-tap actions to paste links or upload screenshots.
-*   **Analysis Result**: Split view starting with a large, color-coded gauge (Trust Meter) and a short summary, followed by a secondary section for detailed breakdowns (Bias, Source, Fact-Check Links).
-*   **Languages Toggle**: Sticky header button for instant English $\leftrightarrow$ Hindi translation of the interface.
+### 6.2 Primary Source Detector (Deduplication)
+The system must identify syndicated content (e.g., blogs republishing Reuters or AP wires) to prevent inflated source counts. Multi-channel diversity metrics are computed using deduplicated primary nodes.
 
----
-
-## 8. Non-Functional Requirements
-
-### 8.1 Performance Goals
-*   **Lighthouse Score**: >90 for Performance, Accessibility, and Best Practices.
-*   **Time to Interactive (TTI)**: <1.5 seconds on a standard 3G connection.
-*   **Scalability**: API structure built to handle peak loads (e.g., viral news cycles) using serverless endpoint structures or horizontal container scaling.
-
-### 8.2 Security Goals
-*   **Data Minimization**: Guest analysis inputs are processed in-memory and are not stored unless requested by a logged-in user.
-*   **Rate-limiting**: IP-based rate limiting on content submission endpoints to prevent automated spamming of NLP APIs.
-*   **Input Sanitization**: Strict filters for raw text, file uploads, and URL parameters to prevent cross-site scripting (XSS) and remote code execution (RCE).
-
-### 8.3 Accessibility Requirements
-*   **WCAG 2.1 AA Compliance**: All text contrast ratios must meet or exceed 4.5:1.
-*   **Aria Labels**: Mandatory on all custom forms, buttons, and trust meter gauges.
-*   **Screen Reader Friendly**: Visual diagrams (like the trust meter) must have semantic text descriptions.
+### 6.3 Mathematical Confidence Calculations
+Confidence ratings must not be generated via LLM prompt heuristics. Instead, the backend must apply:
+$$\text{Confidence} = \text{Quantity} \cdot 0.20 + \text{Quality} \cdot 0.35 + \text{Agreement} \cdot 0.25 + \text{Diversity} \cdot 0.20$$
+With a step-by-step transparency log returned in the JSON payload explaining the components.
 
 ---
 
-## 9. Edge Cases & Error Handling Philosophy
+## 7. Retrieval-Augmented Verification (RAV v2) Engine Requirements
 
-### 9.1 Edge Cases
-*   **Unidentifiable Claims**: When content contains new, local, or highly localized claims not present in fact-check databases.
-    *   *Mitigation*: The system must not flag the claim as fake. It must label it "Unverified/New Claim", lower the $V_{claims}$ score slightly, and advise users: *"This is a very new topic. Wait for trusted outlets to publish reports before sharing."*
-*   **Mixed Credibility Articles**: An article contains mostly true facts but features a highly sensational, misleading headline.
-    *   *Mitigation*: Separate analysis of Title vs. Body, highlighting the gap to the user.
-*   **OCR Failures**: Highly blurred or handwritten screenshots.
-    *   *Mitigation*: Gracefully request the user to type the text manually or crop the key section.
+### 7.1 Claim Classification Engine
+Before any search begins, the system parses the user's input to extract semantic factual parameters and classifies the claim into one or more of the 19 supported categories (Death / Celebrity Death, Health / Medical, Government Announcement, Election / Politics, Crime, Disaster, Financial Scam, Investment, Sports, Entertainment, Science, Space, Education, Historical, Technology, Weather, Business, International Affairs, Social Media Rumor).
 
-### 9.2 Error Handling Philosophy
-TruthLens AI must never crash or show cryptic error codes (e.g., `Error 500: Internal Server Error`). All errors must be humanized and actionable:
-*   *"We couldn't read the article at this link. It might be behind a paywall. Please copy and paste the text directly."*
-*   *"The uploaded image is too blurry. Try taking a cleaner screenshot of just the text."*
-*   *"We are experiencing high traffic. Running a Quick Check instead of Deep Analysis to save time."*
+### 7.2 Entity Linking Engine
+Replaces simple keyword matching. It resolves raw subjects to canonical real-world entities (person, organization, location) and computes a confidence level:
+*   **Ambiguity Interceptor**: If the entity confidence is low ($<60\%$) or highly ambiguous (e.g. just "Amitabh" or "Zubair"), the backend returns `requiresClarification: true` alongside candidate options.
+*   **Clarification Dialog**: The frontend intercepts this response (HTTP 409) and prompts the user to select the intended entity before starting the crawl.
+
+### 7.3 Verification Strategy Selector & Dynamic Source Prioritization
+The verification strategy automatically adapts based on the detected claim category:
+*   **Celebrity Death**: Prioritizes family announcements, hospital bulletins, and trusted news wires; strictly rejects independent blogs and requires multiple confirmations.
+*   **Health / Medical**: Prioritizes WHO guidelines, CDC bulletins, and peer-reviewed journals; elevates official confirmation weight in the trust engine.
+*   **Government Announcements**: Prioritizes Press Information Bureau (PIB) and official `.gov` portals.
+*   **Space / Science**: Prioritizes space agencies (NASA, ISRO) and Nature/Science journals.
+*   **Financial Scam**: Prioritizes regulatory warning lists (RBI, SEBI, SEC) and official yojana checkers.
+
+### 7.4 Query Intelligence & Bidirectional Retrieval
+*   **Multi-Query Generator**: Generates 6 category-specific queries targeting optimal platforms (e.g. searching obituaries for death claims, PubMed for medical claims).
+*   **Bidirectional Crawl**: Searches both supporting and contradicting directions in parallel to collect all viewpoints before verdict calculations.
+
+### 7.5 Evidence Validator & False Positive Reduction
+*   Every retrieved article is analyzed against the claim metadata and canonical entity.
+*   **Relevance Scoring**: Computes a 100-point score based on Entity Match (30%), Claim/Event Similarity (30%), Fact-check Context (15%), and Source Credibility (20%). Discards sources scoring below 50.
+*   **False Positive Reduction**: Rejects sources if they discuss a different event, similar keywords in a different context, or reference a different person.
+*   **Selection Explanation**: Attaches a detailed note on why specific sources were prioritized (e.g. *"WHO and peer-reviewed journals were prioritized over general news websites for this Health claim."*).
+
+### 7.6 Multi-Stage Confidence & Grounding Safeguards
+*   **Multi-Stage Confidence**: Replaces single overall scores with 6 distinct validation gates: Entity, Claim, Retrieval, Evidence, Verdict, and Overall Confidence scores.
+*   **RAG Context Grounding**: Compiles an audited Markdown fact dossier representing the **sole** allowed source of knowledge for the LLM during narrative generation.
+*   **Freshness Decay & Conflict Resolution**: Applies date-based freshness multipliers and reduces confidence if contradicting sources are detected.
 
 ---
 
-## 10. Assumptions, Risks & Limitations
+## 8. AI Orchestration Layer Requirements
 
-### 10.1 Assumptions
-*   High-fidelity LLM APIs (e.g., Gemini) remain active and cost-efficient for text parsing, translation, and tone analysis.
-*   Standard fact-checking database registries (such as Google Fact Check Tools API) remain accessible.
+### 8.1 Model Swappability & Decoupled Task Routing
+*   The platform must isolate LLM prompt executions from business logic. Every AI query must route through `aiOrchestrator.js`.
 
-### 10.2 Risks & Mitigations
-*   **Risk**: AI Hallucination. The model itself generates inaccurate explanations during Deep Analysis.
-    *   *Mitigation*: Implement strict system prompts for the LLM, restricting it from generating claims not directly backed by its search results or input text. Always prioritize direct quotes from retrieved factcheck citations.
-*   **Risk**: API costs spiral out of control during high-viral news periods.
-    *   *Mitigation*: Implement aggressive caching of analyzed URLs and text hashes. If a link has been analyzed in the last 2 hours, return the cached result.
+### 8.2 Failover Strategy & Retry Mechanisms
+*   The orchestrator must try primary providers (e.g. OpenRouter) first and, in case of persistent errors, fail over to backup channels (e.g. Google Gemini Direct SDK).
+*   Requests must retry with exponential backoffs (e.g., initial 1000ms delay with a factor of 2) before declaring provider downtime.
 
-### 10.3 Limitations
-*   Real-time video verification is excluded from the current scope.
-*   Closed-network verification (e.g., encrypted WhatsApp groups) is impossible; the user must manually copy the text or upload screenshots to analyze them.
+### 8.3 Observability & Admin Health Checks
+*   **Observability telemetry**: The system must monitor task latencies, retry ratios, and query status.
+*   **Health API Node**: Expose an endpoint `/api/v1/health` checking MongoDB state, OpenRouter connectivity, Gemini SDK status, and average processing speeds.
+
+### 8.4 User Tiers Rate Limiting
+*   Abuse prevention rules must throttle requests:
+    *   **Guests**: restricted to 5 audits per hour.
+    *   **Authenticated accounts**: restricted to 60 audits per hour.
+
+---
+
+## 9. Explainability Engine (XAI) Requirements
+
+### 9.1 AI Courtroom Experience
+*   The UI must adopt a courtroom theme presenting Verdict Cards, Prosecution/Defense panels, Judge Panels, and Evidence Chains.
+
+### 9.2 Evidence Chain & Source Justification
+*   **Evidence Chain**: An interactive step-by-step flowchart showing the entire processing trail from normalization to verdict.
+*   **Source Justification**: Expands every source reference to answer reliability index, data age, and primary status.
+
+### 9.3 Persona Explainer ("Explain Like...")
+*   Allow users to toggle explanation narrative styles dynamically (Child, Student, General Public, Researcher, Journalist, and Developer).
+
+---
+
+## 10. Production Hardening & Graceful Failover Specifications
+
+### 10.1 Whitelisted File Upload Integrity
+*   Upload configurations must strictly restrict payloads to images (PNG, JPEG, WebP), documents (PDF), and videos (MP4, WebM, AVI, MOV), capping size limits at 25MB.
+
+### 10.2 Graceful Degradation on Input Exceptions
+*   If an uploaded PDF is corrupted, or if Tesseract fails on a low-resolution screenshot, the controller must catch the error and present a helpful user recovery instruction rather than throwing raw stack traces.
+*   If a video upload lacks audio speech tracks, Whisper transcription must fail over to keyframe OCR extraction.
+
+### 10.3 Production Error Masking
+*   In production configurations, all error boundaries must mask internal exception callstacks, returning clean JSON payloads.
+
+---
+
+## 11. PWA & Demo Mode Requirements
+
+### 11.1 Progressive Web App Capabilities
+*   **PWA manifests**: Expose `manifest.json` describing standalone orientation, start URLs, name, icons, and theme parameters (`#3b82f6`) to support desktop/mobile installation.
+
+### 11.2 Interactive Resettable Demo Sandbox
+*   **Demo Desk**: The main landing workspace must render an interactive segment loading curated examples for Verified True, Verified False, Misleading, Breaking News, YouTube video link, X post link, Screenshot upload, and PDF document checks.
+*   **One-Click Resetter**: Embody a clear button to purge all input fields in a single click, allowing judges to start fresh audits easily.

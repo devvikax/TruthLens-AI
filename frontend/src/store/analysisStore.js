@@ -226,6 +226,17 @@ export const useAnalysisStore = create((set, get) => ({
     } catch (error) {
       clearInterval(intervalTimer);
       set({ isAnalyzing: false });
+
+      if (error.response && error.response.status === 409 && error.response.data.requiresClarification) {
+        return {
+          success: false,
+          requiresClarification: true,
+          subject: error.response.data.subject,
+          candidates: error.response.data.candidates,
+          message: error.response.data.message
+        };
+      }
+
       const msg = error.response?.data?.message || 'Verification request timed out. Please check your connection.';
       return { success: false, message: msg };
     }

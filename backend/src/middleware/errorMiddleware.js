@@ -7,6 +7,10 @@ const notFound = (req, res, next) => {
 
 // Centralized error boundary
 const errorHandler = (err, req, res, next) => {
+  console.error('=== CENTRAL ERROR BOUNDARY CAUGHT EXCEPTION ===');
+  console.error(err.stack || err);
+  console.error('==============================================');
+
   let statusCode = res.statusCode === 200 ? 500 : res.statusCode;
   let message = err.message;
 

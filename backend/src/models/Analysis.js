@@ -19,7 +19,7 @@ const AnalysisSchema = new mongoose.Schema(
     },
     inputType: {
       type: String,
-      enum: ['text', 'url', 'image', 'pdf'],
+      enum: ['text', 'url', 'image', 'pdf', 'video'],
       required: true,
     },
     sourceUrl: {
@@ -33,6 +33,7 @@ const AnalysisSchema = new mongoose.Schema(
       claimVerification: { type: Number, required: true, min: 0, max: 100 },
       emotionScore: { type: Number, required: true, min: 0, max: 100 },
     },
+    // Backwards compatible field
     extractedClaims: [
       {
         claim: { type: String, required: true },
@@ -41,6 +42,77 @@ const AnalysisSchema = new mongoose.Schema(
         url: { type: String, default: '' },
       },
     ],
+    // Expanded claim decomposer dossiers
+    decomposedClaims: [
+      {
+        id: { type: String },
+        originalSentence: { type: String },
+        normalizedSentence: { type: String },
+        priority: { type: String },
+        confidence: { type: Number },
+        supportingCount: { type: Number, default: 0 },
+        contradictingCount: { type: Number, default: 0 },
+        independentCount: { type: Number, default: 0 },
+        officialCount: { type: Number, default: 0 },
+        evidenceStrength: { type: Number, default: 0 },
+        agreementPercent: { type: Number, default: 0 }
+      }
+    ],
+    // Categorized entity markers
+    entities: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    // Scored and whitelisted media references
+    evidenceCollected: [
+      {
+        title: { type: String },
+        snippet: { type: String },
+        url: { type: String },
+        source: { type: String },
+        category: { type: String },
+        reliabilityScore: { type: Number },
+        isOfficial: { type: Boolean },
+        isTrusted: { type: Boolean },
+        explanation: { type: String },
+        primarySource: {
+          isOriginal: { type: Boolean },
+          originalReporter: { type: String },
+          deduplicationKey: { type: String },
+          relation: { type: String },
+          explanation: { type: String }
+        }
+      }
+    ],
+    diversityProfile: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    contradictionReport: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
+    timeline: [
+      {
+        step: { type: String },
+        description: { type: String },
+        status: { type: String }
+      }
+    ],
+    badges: [
+      {
+        text: { type: String },
+        type: { type: String }
+      }
+    ],
+    evidenceGraph: {
+      type: mongoose.Schema.Types.Mixed,
+      default: { nodes: [], links: [] }
+    },
+    confidenceDetails: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    },
     sentimentAnalysis: {
       dominantEmotion: { type: String, default: 'Objective' },
       sensationalismDetected: { type: Boolean, default: false },
@@ -50,6 +122,10 @@ const AnalysisSchema = new mongoose.Schema(
       en: { type: String, required: true },
       hi: { type: String, required: true },
     },
+    metadata: {
+      type: mongoose.Schema.Types.Mixed,
+      default: {}
+    }
   },
   {
     timestamps: true,

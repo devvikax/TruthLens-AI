@@ -1,29 +1,16 @@
 {
-  "short_name": "TruthLens",
-  "name": "TruthLens AI - Think Before You Share",
-  "description": "AI-powered media literacy and factcheck verification pipeline.",
+  "short_name": "VeriLens AI",
+  "name": "VeriLens AI - Multimodal AI Claim Verification",
   "icons": [
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
-    },
-    {
-      "src": "logo192.png",
-      "type": "image/png",
-      "sizes": "192x192",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "logo512.png",
-      "type": "image/png",
-      "sizes": "512x512",
-      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "background_color": "#0b0f19",
-  "theme_color": "#6366f1",
+  "start_url": ".",
   "display": "standalone",
+  "theme_color": "#3b82f6",
+  "background_color": "#0f172a",
   "orientation": "portrait"
 }

@@ -69,12 +69,12 @@ export default function Chat({ sessionId, onClose }) {
 
         if (query.includes('10') || query.includes('simply') || query.includes('सरल')) {
           botText = language === 'en'
-            ? `Imagine a friend told you that lemon cures everything. TruthLens checked and found that doctors say this is not true! The message uses scary alarms like "MUST SHARE" to trick you. It has a low trust score of ${trust}%.`
+            ? `Imagine a friend told you that lemon cures everything. VeriLens checked and found that doctors say this is not true! The message uses scary alarms like "MUST SHARE" to trick you. It has a low trust score of ${trust}%.`
             : `सोचिए किसी ने आपसे कहा कि नींबू से सब ठीक हो जाता है। डॉक्टरों का कहना है कि यह झूठ है! यह पोस्ट भ्रामक है और इसका ट्रस्ट स्कोर ${trust}% है।`;
         } else if (query.includes('whatsapp') || query.includes('reply') || query.includes('जवाब')) {
           botText = language === 'en'
-            ? `Copy this message to reply: "Hi! I verified this info on TruthLens AI, and it flags it as ${trust > 40 ? 'caution advised' : 'misleading'} because fact-checks debunk the cures. Here is the link to read more: https://truthlens.ai/results"`
-            : `आप इसे कॉपी कर सकते हैं: "नमस्ते! मैंने इस जानकारी को ट्रुथलेंस एआई पर चेक किया। इसका स्कोर ${trust}% है क्योंकि डॉक्टरों ने इसे असत्य बताया है।"`;
+            ? `Copy this message to reply: "Hi! I verified this info on VeriLens AI, and it flags it as ${trust > 40 ? 'caution advised' : 'misleading'} because fact-checks debunk the cures. Here is the link to read more: https://verilens.ai/results"`
+            : `आप इसे कॉपी कर सकते हैं: "नमस्ते! मैंने इस जानकारी को वेरीलेंस एआई पर चेक किया। इसका स्कोर ${trust}% है क्योंकि डॉक्टरों ने इसे असत्य बताया है।"`;
         } else {
           botText = language === 'en'
             ? "Here is the key breakdown:\n1. The claim is unverified by official health groups.\n2. Sensational vocabulary is used to cause worry.\n3. Verify official advisories before sharing."

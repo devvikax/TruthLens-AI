@@ -57,7 +57,17 @@ export default function TrustGauge({ score = 0, size = 180, strokeWidth = 14 }) 
       height: size
     }}>
       {/* SVG Arc Gauge */}
-      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+      <svg width={size} height={size} style={{ transform: 'rotate(-90deg)', overflow: 'visible' }}>
+        <defs>
+          <filter id="gauge-glow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
         {/* Track circle */}
         <circle
           cx={size / 2}
@@ -67,7 +77,22 @@ export default function TrustGauge({ score = 0, size = 180, strokeWidth = 14 }) 
           stroke="var(--border-color)"
           strokeWidth={strokeWidth}
         />
-        {/* Progress circle */}
+        {/* Glow halo backing circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth={strokeWidth - 2}
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          opacity={0.4}
+          filter="url(#gauge-glow)"
+          style={{ transition: 'stroke-dashoffset 100ms ease-out' }}
+        />
+        {/* Main Progress circle */}
         <circle
           cx={size / 2}
           cy={size / 2}

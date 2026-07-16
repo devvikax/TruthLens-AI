@@ -1,381 +1,177 @@
 # System Architecture Document
 
-## TruthLens AI
-*Tagline: Think Before You Share.*
+## VeriLens AI - Multimodal AI Claim Verification & Investigation Lab
+*Tagline: Verify Any Claim. Trust Every Verdict.*
 
 ---
 
-## 1. High-Level System Architecture
+## 1. High-Level Architecture Overview
 
-TruthLens AI follows a decoupled MERN stack architecture with a modular AI Analysis Orchestrator. The front end is a responsive, mobile-first single-page application (SPA), and the backend serves as a RESTful API gateway that interacts with an database cluster, scrapers, OCR engines, and AI services.
+VeriLens AI operates as a decoupled MERN platform upgraded to support a **Unified Multimodal Claim Verification Pipeline**. The system ingests Text, URLs, Screenshots, PDFs, and Video (YouTube, Reels, X, MP4) feeds, normalizes them into structured text, decomposes the text into claims, verifies each claim independently, and returns granular timeline records and interactive evidence graphs.
 
 ```mermaid
 graph TD
-    Client[React Frontend] -->|HTTPS Requests| Backend[Node/Express Backend]
-    Backend -->|Read/Write| DB[(MongoDB Database)]
-    Backend -->|Content Processing| Orchestrator[AI Analysis Orchestrator]
+    Client[React Frontend] -->|1. Submit Media File/Link| Gateway[Express API Backend]
     
-    Orchestrator -->|1. Extract Text| OCR[OCR / PDF Parser Services]
-    Orchestrator -->|2. Web Scrape| Scraper[Headless Scraper Service]
-    Orchestrator -->|3. Query Claims| FactCheckAPI[Fact-Checking API Registry]
-    Orchestrator -->|4. Analyze Claims & Sentiment| LLM[Google Gemini API]
+    %% Video Pipeline
+    Gateway -->|2. If Video| VideoEngine[Video Processing Engine]
+    VideoEngine -->|Demux Audio| Whisper[Speech-to-Text Speech Engine]
+    VideoEngine -->|Keyframe Extraction| OCR[Frame OCR Engine]
+    Whisper -->|Timestamped Text| Merger[Transcript Merger]
+    OCR -->|Timestamped Overlay Text| Merger
     
-    Orchestrator -->|Assemble Metrics| Backend
-    Backend -->|Generate JSON/PDF| Client
-```
-
-### 1.1 Core Components
-1.  **Frontend SPA**: Built with React (Vite-powered) using CSS, Zustand for light state management, and Axios for HTTP requests.
-2.  **API Backend Gateway**: Built with Node.js and Express. Handles routing, schema validation, rate-limiting, user accounts/sessions, and orchestration of the analysis workflow.
-3.  **Database Cluster**: MongoDB instances holding user profile data, session histories, cached verification summaries, and flagged source whitelists/blacklists.
-4.  **AI Analysis Orchestrator**: A specialized module within the backend that handles task parallelization (e.g., executing tone analysis, web scraping, and claims verification in parallel) and consolidates results into the unified **Trust Score**.
-
----
-
-## 2. Frontend Architecture & Design
-
-### 2.1 Technology Stack
-*   **Framework**: React 18+ (using functional components and hooks).
-*   **Build Tool**: Vite (for near-instant hot module replacement and optimized production builds).
-*   **Styling**: Vanilla CSS with CSS Variables for theme consistency, HSL color tokens, and custom animations.
-*   **State Management**: Zustand (lightweight, minimal boilerplate, ideal for simple session storage and modal states).
-*   **Routing**: React Router DOM v6.
-*   **HTTP Client**: Axios (configured with intercepts for token/session management).
-
-### 2.2 Project Folder Structure (Frontend)
-
-```
-frontend/
-├── public/
-│   ├── favicon.ico
-│   └── locales/                # Language assets (en.json, hi.json)
-├── src/
-│   ├── assets/                 # Icons, illustrations, custom fonts
-│   ├── components/             # Reusable global components
-│   │   ├── Common/             # Buttons, Inputs, Modals, Loaders
-│   │   ├── Navigation/         # Navbar, Sidebar, Footer
-│   │   ├── QuickCheck/         # Quick Check Input & Basic Trust Gauge
-│   │   └── DeepAnalysis/       # Interactive Chat, Source Table, Metric Breakdown
-│   ├── context/                # Theme and Language Provider contexts
-│   ├── hooks/                  # Custom hooks (e.g., useAuth, useAnalysis)
-│   ├── pages/                  # Route-level components
-│   │   ├── Home.jsx            # Unified dashboard for Quick & Deep entries
-│   │   ├── Results.jsx         # Detailed report visualization
-│   │   ├── History.jsx         # Saved user analyses (authenticated)
-│   │   ├── Profile.jsx         # User preferences and settings
-│   │   └── Login.jsx           # Simple email/Google authentication
-│   ├── services/               # API connection modules
-│   │   ├── api.js              # Axios configuration and error handling
-│   │   └── analysisService.js  # Endpoints for running analysis
-│   ├── store/                  # Zustand store definitions
-│   │   ├── authStore.js        # User state
-│   │   └── analysisStore.js    # Current and cached analysis results
-│   ├── styles/                 # Theme tokens and base styling
-│   │   ├── variables.css       # HSL palette, fonts, spacing
-│   │   ├── global.css          # Base resets and animations
-│   │   └── components.css      # Shared element designs
-│   ├── App.jsx
-│   └── main.jsx
-```
-
-### 2.3 State Management Strategy
-We use **Zustand** to manage two core slices of state:
-1.  **Auth Slice**: Stores token payloads, active user profile details, and login statuses. Persists to `localStorage` automatically using Zustand middleware.
-2.  **Analysis Slice**: Holds the current active analysis input, loading state indicators, error details, and final calculation outputs.
-
----
-
-## 3. Backend Architecture & Design
-
-### 3.1 Technology Stack
-*   **Platform**: Node.js (LTS version).
-*   **Framework**: Express.js.
-*   **Database ODM**: Mongoose.
-*   **OCR**: Tesseract.js (self-contained node-based engine) or Cloud Vision API wrapper.
-*   **Scraper**: Puppeteer Core / Cheerio (for fast, lightweight page parsing).
-*   **Security & Auth**: JSON Web Tokens (JWT), bcrypt for passwords, and Helmet for HTTP header protection.
-
-### 3.2 Project Folder Structure (Backend)
-
-```
-backend/
-├── src/
-│   ├── config/                 # Database, Gemini, and general configs
-│   │   ├── db.js
-│   │   └── ai.js
-│   ├── controllers/            # Request handlers
-│   │   ├── authController.js
-│   │   └── analysisController.js
-│   ├── middleware/             # Express Middlewares
-│   │   ├── authMiddleware.js   # JWT validation
-│   │   ├── rateLimiter.js      # IP and API rate limiting
-│   │   └── errorHandler.js     # Unified error conversion
-│   ├── models/                 # Mongoose schemas
-│   │   ├── User.js
-│   │   └── Analysis.js
-│   ├── services/               # Core business & AI logic
-│   │   ├── orchestrator.js     # Analysis manager
-│   │   ├── ocrService.js       # Text extraction from images
-│   │   ├── scraperService.js   # Article parsing
-│   │   ├── geminiService.js    # LLM integration wrapper
-│   │   └── searchService.js    # Factcheck indexing queries
-│   ├── utils/                  # Helper functions (PDF generators, math formulas)
-│   │   ├── pdfGenerator.js
-│   │   └── trustCalculator.js
-│   ├── app.js                  # App instantiation
-│   └── server.js               # Entry point
-├── tests/                      # Integration and unit tests
-└── package.json
-```
-
----
-
-## 4. AI & Data Processing Pipelines
-
-### 4.1 URL Content Scraper Flow
-When a user submits a URL, the system scrapes and cleans the content to feed it to the NLP models:
-
-```mermaid
-sequenceDiagram
-    participant B as Backend
-    participant S as Scraper Service
-    participant Target as Target Website
+    %% General pipelines
+    Gateway -->|2. If PDF| PDFParser[PDF Extractor]
+    Gateway -->|2. If Image| ImageOCR[Image Tesseract OCR]
+    Gateway -->|2. If URL| Scraper[Web Scraper]
     
-    B->>S: Fetch URL(target_url)
-    S->>Target: HTTP GET / Load Page headless
-    Target-->>S: Raw HTML Document
-    Note over S: 1. Remove script, style, header, footer elements.<br/>2. Locate core container (article, main).<br/>3. Extract title & meta description.<br/>4. Extract paragraphs.
-    S-->>B: Clean Article Data (Title, Body, Meta, Author)
-```
-
-### 4.2 OCR & Screenshot Pipeline
-For image uploads, the system extracts the text overlay before processing:
-1.  **Image Receipt**: Backend receives the multipart file upload.
-2.  **Preprocessing**: Grayscales and resizes the image to optimize character detection.
-3.  **OCR Processing**: Runs Tesseract.js over the processed buffer.
-4.  **Cleaning**: Removes artifact characters and aligns broken text rows into a single text block.
-
-### 4.3 Detailed AI Processing Pipeline & Analysis Flow
-
-```
-   Clean Text Block (from OCR, Scraper, or Manual Input)
-                         |
-                         v
-            [ Language & Tone Detection ]
-                         |
-       +-----------------+-----------------+
-       | (Hindi/Hinglish)                  | (English)
-       v                                   v
-[ Translate to English ]        [ Direct NLP Processing ]
-       |                                   |
-       +-----------------+-----------------+
-                         |
-                         v
-             [ Named Entity & Claim Extraction ]
-                         |
-       +-----------------+-----------------+
-       |                                   |
-       v                                   v
-[ Sentiment & Emotion Analysis ]   [ Fact Check Search Query ]
-(sensationalism, fear levels)      (Google Fact Check, whitelists)
-       |                                   |
-       +-----------------+-----------------+
-                         |
-                         v
-             [ trustCalculator.js Calculation ]
-                         |
-                         v
-             [ Gemini Synthesis of Narrative ]
+    %% Claims Verification Core
+    Merger -->|Structured Text| Decomposer[Claim Decomposition Engine]
+    PDFParser -->|Structured Text| Decomposer
+    ImageOCR -->|Structured Text| Decomposer
+    Scraper -->|Structured Text| Decomposer
+    
+    Decomposer -->|Claims list with Timestamps| Collector[Evidence Collector]
+    Collector -->|Parallel queries| FactCheck[Fact-check registries / Wikipedia / Search]
+    Collector -->|Compile consensus| VerdictEngine[Verdict & Score Synthesis]
+    
+    VerdictEngine -->|Dossier JSON| Gateway
+    Gateway -->|Interactive Dashboard Response| Client
 ```
 
 ---
 
-## 5. Database Schema Design
+## 2. Component Layout & Modular Services
 
-We utilize MongoDB to store user configurations and analysis histories.
-
-### 5.1 User Collection Schema (`users`)
-```json
-{
-  "_id": "ObjectId",
-  "name": "String",
-  "email": { "type": "String", "unique": true, "required": true },
-  "passwordHash": { "type": "String", "required": false }, // null for OAuth
-  "provider": { "type": "String", "enum": ["local", "google"] },
-  "preferences": {
-    "language": { "type": "String", "default": "en" },
-    "theme": { "type": "String", "default": "dark" }
-  },
-  "createdAt": "Date",
-  "updatedAt": "Date"
-}
-```
-
-### 5.2 Analysis Collection Schema (`analyses`)
-```json
-{
-  "_id": "ObjectId",
-  "userId": { "type": "ObjectId", "ref": "User", "required": false }, // null for guests
-  "inputType": { "type": "String", "enum": ["text", "url", "image", "pdf"] },
-  "rawInput": "String", // Stores text or extracted OCR text
-  "sourceUrl": "String", // null if manual text or image
-  "title": "String", // Extracted title or generated summary title
-  "metrics": {
-    "trustScore": { "type": "Number", "min": 0, "max": 100 },
-    "sourceReputation": { "type": "Number", "min": 0, "max": 100 },
-    "biasScore": { "type": "Number", "min": 0, "max": 100 },
-    "claimVerification": { "type": "Number", "min": 0, "max": 100 },
-    "emotionScore": { "type": "Number", "min": 0, "max": 100 }
-  },
-  "extractedClaims": [
-    {
-      "claim": "String",
-      "verdict": "String",
-      "checkedBy": "String", // Factcheck site name
-      "url": "String" // Citation link
-    }
-  ],
-  "sentimentAnalysis": {
-    "dominantEmotion": "String",
-    "sensationalismDetected": "Boolean",
-    "explanation": "String"
-  },
-  "explainableNarrative": {
-    "en": "String",
-    "hi": "String"
-  },
-  "createdAt": "Date"
-}
-```
+### 2.1 Video Processing Engine (`src/services/videoService.js`)
+Handles multimedia conversion and transcript extraction:
+1.  **Audio Demuxing**: Isolates sound files from video streams.
+2.  **Speech-to-Text**: Formulates speech recognition tracks mapping spoken sentences to relative starting timestamps.
+3.  **Frame Sampling & OCR**: Samples key video frames at 3-second intervals, executing frame OCR to capture subtitles or visual overlays.
+4.  **Transcript Merger**: Combines audio transcripts and visual texts into a single synchronized structured script, preserving precise timestamps.
 
 ---
 
-## 6. API Design Strategy
+## 3. Evidence Intelligence System (STR & Deduplication)
 
-All routes are prefixed with `/api/v1`.
+### 3.1 Source Trust Registry (STR) Model
+The schema `SourceRegistry` persists credibility logs for crawled domains.
 
-### 6.1 Authentication Endpoints
-*   `POST /auth/register` - Creates a new user profile.
-*   `POST /auth/login` - Authenticates credentials, returns JWT in httpOnly Cookie.
-*   `POST /auth/oauth/google` - Verifies Google OAuth token, initiates session.
-*   `POST /auth/logout` - Clears cookie session.
+### 3.2 Primary Source Detector (Deduplication)
+Analyzes evidence snippets using regular expressions to flag syndicated wire content (e.g. *"according to Reuters"* or *"Associated Press reported"*). Aggregates republished entries under a single deduplication key.
 
-### 6.2 Analysis Endpoints
-*   `POST /analysis/quick` - Receives text/URL. Performs fast lightweight evaluation. Returns immediate score and verdict.
-*   `POST /analysis/deep` - Receives text/URL/image/PDF. Runs complete background pipeline (OCR, Scrape, FactCheck, LLM analysis). Returns structured response.
-*   `GET /analysis/history` - Returns paginated analysis list for the logged-in user.
-*   `GET /analysis/:id` - Retrieves a specific analysis entry.
-*   `GET /analysis/:id/report` - Generates and returns a downloadable PDF report of the analysis.
+### 3.3 Adjacency Relationship Graph Compiler (`graphGenerator.js`)
+Compiles a node-link network map of the claims verification chain mapping claims, publishers, wire agencies, and verdicts.
+
+### 3.4 Mathematical Confidence Calculations
+Computes confidence percentage mathematically:
+$$\text{Confidence} = C_{\text{Quantity}} \cdot 0.20 + C_{\text{Quality}} \cdot 0.35 + C_{\text{Agreement}} \cdot 0.25 + C_{\text{Diversity}} \cdot 0.20$$
 
 ---
 
-## 7. Security & Scalability Plan
+## 4. Retrieval-Augmented Verification (RAV v3) Engine Architecture
 
-### 7.1 Security Architecture
-*   **Secrets Storage**: All database URIs, API keys (Gemini, Google Factcheck), and JWT secrets reside in `.env` files and are loaded strictly into memory.
-*   **CORS Configuration**: Restrict API access to trusted client origins only.
-*   **CSRF & XSS Prevention**: Use `Helmet` to configure secure HTTP headers (Content Security Policy, X-Frame-Options). All input text is sanitized using `dompurify` on the client and `express-validator` on the server before database write or model ingestion.
+### 4.1 Intelligent Claim Classification Engine (`claimUnderstander.js`)
+*   Extracts semantic parameters from raw texts (subject, predicate, object, event, location, negation, intent).
+*   Classifies claims into 19 supported categories (Death / Celebrity Death, Health / Medical, Government Announcement, Election / Politics, Crime, Disaster, Financial Scam, Investment, Sports, Entertainment, Science, Space, Education, Historical, Technology, Weather, Business, International Affairs, Social Media Rumor).
 
-### 7.2 Scalability & Caching
-*   **Request Caching**: Store MD5 hashes of input text and URLs along with their analysis IDs in a Redis cache or in-memory MongoDB buffer. If the same content is checked within 12 hours, return the existing analysis results instead of querying the AI APIs.
-*   **Rate Limiting**: Limit API requests to 15 per minute per IP address for standard analysis endpoints to prevent denial-of-service attempts.
+### 4.2 Entity Linking Engine (`entityLinker.js`)
+*   Maps raw subject names to canonical real-world entities (e.g. "Amitabh" $\rightarrow$ "Amitabh Bachchan").
+*   Checks for ambiguity: if link confidence is low ($<60\%$), it flags `requiresClarification: true` along with candidate suggestions.
+*   HTTP 409 intercepts trigger a modal select panel on the frontend (`Analysis.jsx`) allowing users to choose the target entity.
 
----
+### 4.3 Custom Search Generator (`queryGenerator.js`)
+*   Dynamically builds 6 distinct queries targeted for the specific claim category (e.g. PubMed for medical, obituaries/spokesperson statements for celebrity deaths).
 
-## 8. Deployment Strategy
+### 4.4 Verification Strategy Selector (`evidenceCollector.js`)
+*   Automatically shifts query routing matrices:
+    *   *Death claims* route to fact-checks, obituaries, and official wires (strictly ignoring blogs).
+    *   *Health claims* route to PubMed, WHO guidelines, and CDC registries.
+    *   *Government claims* route to PIB fact checks and government domains (.gov).
+    *   *Space claims* route to NASA, ISRO, ESA, and Nature/Science journals.
+*   Maps selection explanations to `whyItMatters` for UI transparency.
 
-*   **Frontend**: Deployed to Vercel or Netlify (static build distribution) with route caching and CDN redirection.
-*   **Backend Node.js API**: Deployed to Render, Railway, or AWS Elastic Beanstalk (horizontal container scaling).
-*   **Database**: MongoDB Atlas cloud cluster configured with secondary replica nodes to ensure failover capability.
-*   **Environment Variables Setup**:
-    ```ini
-    PORT=5000
-    NODE_ENV=production
-    MONGODB_URI=mongodb+srv://...
-    JWT_SECRET=your_jwt_signing_key_here
-    GEMINI_API_KEY=your_gemini_api_key
-    FACTCHECK_API_KEY=your_google_fact_check_api_key
-    ```
+### 4.5 Evidence Validator & False Positive Reduction (`evidenceValidator.js`)
+*   Evaluates every source against a 100-point metric: Entity Match (30%), Claim/Event Similarity (30%), Fact-check Context (15%), and Source Credibility (20%). Discards items scoring below 50.
+*   **False Positive Reduction**: Rejects sources if they mention the entity but discuss a different event, mention the event but reference a different person, or match similar keywords in a different context.
 
----
+### 4.6 Dynamic Source Prioritization (`trustEngine.js`)
+*   Calculates weighted trust scores using dynamic weights tailored to the claim category:
+    *   *Health / Medical*: Official confirmation (WHO/CDC) weight elevated to 30%, independent news volume weight reduced to 5% to combat blog spam.
+    *   *Government / Election*: Gazette and official PIB confirmation weight elevated to 35%.
+    *   *Death*: Source consensus weight elevated to 15% to detect hoaxes early.
 
-## 9. AI Intelligence Layer & Methodology
+### 4.7 Multi-Stage Confidence Engine (`confidenceCalculator.js`)
+*   Replaces single overall scores with 5 component-level confidence values:
+    1.  *Entity Confidence* (linking precision)
+    2.  *Claim Confidence* (parse semantic clarity)
+    3.  *Retrieval Confidence* (adapter query coverage)
+    4.  *Evidence Confidence* (source reputation & relevance)
+    5.  *Verdict Confidence* (degree of source consensus)
+*   **Overall Confidence** is calculated as:
+    $$\text{Overall} = \text{Entity} \cdot 0.15 + \text{Claim} \cdot 0.15 + \text{Retrieval} \cdot 0.20 + \text{Evidence} \cdot 0.25 + \text{Verdict} \cdot 0.25$$
 
-### 9.1 Hybrid Processing Pipeline
-Rather than relying on a single large language model (LLM) answer, TruthLens AI uses a multi-stage hybrid fact-check architecture:
-1.  **Extractors (cheerio / tesseract.js / pdf-parse)**: Reads and normalizes input text.
-2.  **Structural Analyzer (Google Gemini API)**: Evaluates semantic elements (Language, entities, factual assertions, tone clickbait flags, loaded bias ratings) and outputs structural JSON.
-3.  **Google Fact-Check tools cross-referencer**: Searches the indexed factcheck APIs using extracted claims.
-4.  **Trust Score Engine**: Aggregates the metrics (Source, Bias, Claims, Emotions) using configured weights.
-5.  **Explainable AI narrative generator**: Translates the results into plain paragraphs in both English and Hindi.
+### 4.8 TTL Cache (`evidenceCache.js`)
+*   An in-memory TTL caching layer hashes inputs. Hit entries bypass new crawls and return the cached verification dossier directly (expire time: 2 hours).
 
-### 9.2 Configurable Weights Methodology
-The Trust Score uses a customizable, weighted aggregation formula. If no custom weights are specified, the system utilizes:
-*   `claimVerification`: 45% (Determined by Fact Check API search matches and claim assessments).
-*   `sourceReputation`: 25% (Based on domain reputation metrics and whitelists).
-*   `biasScore`: 20% (Presents objectivity level; loaded framing reduces score).
-*   `emotionScore`: 10% (Flags clickbait markers and panic triggers).
-
-### 9.3 Gemini Prompting Schema
-To ensure type safety, the model parameter `responseMimeType: "application/json"` is specified, demanding:
-```json
-{
-  "language": "string",
-  "cleanedText": "string",
-  "entities": {
-    "people": ["string"],
-    "organizations": ["string"],
-    "locations": ["string"],
-    "statistics": ["string"]
-  },
-  "claims": ["string"],
-  "bias": {
-    "score": "number",
-    "framing": "string",
-    "explanation": "string"
-  },
-  "emotions": {
-    "score": "number",
-    "triggers": ["string"],
-    "explanation": "string"
-  },
-  "source": {
-    "score": "number",
-    "reputation": "string",
-    "explanation": "string"
-  }
-}
-```
-
-### 9.4 Known Limitations
-*   **Hinglish Normalization**: Informally written WhatsApp Hinglish can decrease claim matching quality. Gemini helps normalize Hinglish before executing searches, but spelling variations remain a factor.
-*   **Screenshot Blur**: Low resolution or tilted text captures degrade Tesseract OCR efficiency. Preprocessing mitigates this but cannot reconstruct fully blurred images.
-*   **Fact-check tools coverage**: The Google Fact Check Tools API is restricted to assertions verified by member organizations. If no matching check exists, the system flags the claim "Needs Verification" rather than making absolute claims.
+### 4.9 RAG Context Grounding (`ragContextBuilder.js`)
+*   Compiles structured facts block representing the **sole** allowed source of knowledge for the LLM.
 
 ---
 
-## 10. Integration & Polished User Configurations
+## 5. AI Orchestration Layer Architecture
 
-### 10.1 History & Bookmarking System
-The log history supports two modes of operation:
-*   **Guest Mode**: Search entries are cached inside client browser `localStorage`.
-*   **Registered Mode**: Records are persisted in MongoDB linked to the User model. Bookmarks are tracked using a compound index mapping `userId` and `analysisId` in `Bookmark` collection, permitting fast, indexed listing of starred reports.
+### 5.1 Model Swappability & Config Routing (`aiConfig.js`)
+Defines setting parameters for provider priorities, connection timeouts, and exponential backoff retry values. Exposes `orchestrateAiTask(taskName, prompt, isJson)`.
 
-### 10.2 PDF Report Generation & Print Layouts
-Rather than pulling bloated external PDF renderers, report exports leverage native browser printing styles:
-*   **Print Stylesheets (`@media print`)**: Configured in `global.css` to hide headers, footers, interactive buttons, and AI drawers, while normalizing color schemes to high-contrast greyscale format.
-*   **PDF Exports**: Tapping "Print / Export PDF" triggers `window.print()`, presenting the user with a pre-formatted print preview layout for direct download or local printing.
+### 5.2 Dynamic Failovers & Retries
+If the primary provider throws a connection exception or times out, the orchestrator retries the call using exponential backoffs.
 
-### 10.3 AI Context-Grounded Workspace
-When a user launches the results dashboard, the frontend initializes a database-backed chat session. When follow-up prompts are submitted:
-1.  The query is sent to `/api/v1/chat/sessions/:sessionId/messages`.
-2.  The backend pulls the associated analysis metadata (claims, trust metrics, XAI narratives).
-3.  The conversational agent grounds its response on this specific metadata, maintaining the conversation history.
+### 5.3 Memory Rate-Limiting Middleware (`rateLimitMiddleware.js`)
+Protects backend computational resources. Enforces user tiers limits.
 
-### 10.4 Multilingual State Strategy
-TruthLens AI is fully localized to support English and Hindi:
-*   **Zustand Language State**: Tracks active language setting (`en` / `hi`) and persists it in `localStorage` and the database user profile.
-*   **Static UI Translation**: Screen labels are mapped using dynamic template lookups depending on store's `language`.
-*   **AI Synthesis Localization**: Gemini prompts synthesize and return explainable narratives in both languages simultaneously (`explainableNarrative.en` and `explainableNarrative.hi`), allowing instant toggles without triggering duplicate LLM calls.
+### 5.4 Health & Telemetry Endpoint (`healthRoutes.js`)
+Provides checks for the database state, API keys configuration, and queries latency summaries.
 
+---
 
+## 6. Explainability Engine (XAI) Architecture
+
+### 6.1 Explain-Like Style Api Endpoint
+Exposes `/api/v1/analysis/:id/explain-like`. Ingests the `style` key (Child, Student, Researcher, Journalist, Developer) and executes a persona-grounded prompt against the AI Orchestration layer.
+
+### 6.2 Courtroom Panels & Claim Folders
+*   **Prosecution & Defense Boards**: Renders contradicting (fact-checks) versus corroborating (government/academic/trusted news) source snippets.
+*   **Claim Dossiers**: Renders expandable case file cards displaying individual priority levels, source reliability index scores, and verification methods.
+*   **Confidence Breakdown**: Visualizes the weighted percentage contributions of Quality, Reliability, Agreement, and Diversity metrics.
+*   **Evidence Chain Flowchart**: Traces the 7 sequential backend processing steps from normalization to verdict.
+
+---
+
+## 7. QA Hardening & Graceful Failure Architecture
+
+### 7.1 File Ingestion Whitelisting (`fileUpload.js`)
+Strictly whitelists allowed extensions and MIME types:
+*   `Images`: `.png`, `.jpg`, `.jpeg`, `.webp` (MIME: `image/*`)
+*   `Documents`: `.pdf` (MIME: `application/pdf`)
+*   `Videos`: `.mp4`, `.webm`, `.avi`, `.mov` (MIME: `video/*`)
+*   Payload size threshold: Max `25MB`.
+
+### 7.2 Graceful Exception Handlers (`analysisController.js`)
+*   **PDF Parsing Errors**: Catches exceptions in `pdfService.js` (e.g. from corrupted or password-protected PDF files) and returns user recovery guides.
+*   **OCR Scanning Errors**: Catches exceptions in `ocrService.js` (e.g. from blurred, low-resolution screenshots) and prompts the user to upload high-contrast captures.
+*   **Video Transcription Errors**: Catches exceptions in `videoService.js` (e.g. from videos without speech tracks) and falls back to frame OCR timelines automatically.
+
+### 7.3 Centralized Error Boundaries (`errorMiddleware.js`)
+If `process.env.NODE_ENV === 'production'`, internal code exception stacks are automatically stripped and masked before returning JSON responses to clients, preventing callstack disclosure leaks.
+
+---
+
+## 8. Deployment & Installable PWA Architecture
+
+### 8.1 Progressive Web App Registration (`manifest.json`)
+*   Frontend assets directory `/public/manifest.json` defines orientation, start url (`.`), standalone mode, and icon sizes.
+*   Linked inside `index.html` headers to support mobile and desktop installation.
+
+### 8.2 Client-Side Route Rewrites (`vercel.json`)
+Redirects all relative paths matching `/(.*)` back to the `/index.html` landing page, preventing Vercel static router 404 errors during client page refreshes.

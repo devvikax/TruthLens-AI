@@ -62,8 +62,8 @@ export default function Home() {
           marginRight: 'auto'
         }}>
           {language === 'en' 
-            ? 'TruthLens AI analyzes news articles, URLs, screenshots, and PDFs. We explain WHY a claim might be misleading, encouraging critical thinking over censorship.'
-            : 'ट्रुथलेंस एआई समाचार लेखों, यूआरएल, स्क्रीनशॉट और पीडीएफ का विश्लेषण करता है। हम समझाते हैं कि कोई दावा क्यों भ्रामक हो सकता है, जिससे सेंसरशिप के बजाय आलोचनात्मक सोच को बढ़ावा मिलता है।'}
+            ? 'VeriLens AI analyzes news articles, URLs, screenshots, and PDFs. We explain WHY a claim might be misleading, encouraging critical thinking over censorship.'
+            : 'वेरीलेंस एआई समाचार लेखों, यूआरएल, स्क्रीनशॉट और पीडीएफ का विश्लेषण करता है। हम समझाते हैं कि कोई दावा क्यों भ्रामक हो सकता है, जिससे सेंसरशिप के बजाय आलोचनात्मक सोच को बढ़ावा मिलता है।'}
         </p>
         
         <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
@@ -209,7 +209,7 @@ export default function Home() {
         }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', marginBottom: 'var(--space-md)' }}>
-              {language === 'en' ? 'Why Trust TruthLens AI?' : 'ट्रुथलेंस एआई पर क्यों भरोसा करें?'}
+              {language === 'en' ? 'Why Trust VeriLens AI?' : 'वेरीलेंस एआई पर क्यों भरोसा करें?'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <div style={{ display: 'flex', gap: 'var(--space-md)' }}>

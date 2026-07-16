@@ -13,6 +13,7 @@ const { extractTextFromPdf } = require('../services/pdfService');
 const { searchFactChecks } = require('../services/searchService');
 const { analyzeText, generateNarrative } = require('../services/geminiService');
 const { uploadToCloudinary } = require('../services/cloudinaryService');
+const { runEvidenceEngine } = require('../services/evidenceEngine');
 
 // Utility Imports
 const { calculateTrustScore } = require('../utils/trustCalculator');
@@ -43,74 +44,51 @@ const quickAnalysis = async (req, res, next) => {
     let rawInputText = input;
     let title = 'Quick Inspection';
     let sourceUrl = '';
+    let inputType = 'text';
 
     // If link, scrape it first
     if (input.startsWith('http')) {
       sourceUrl = input;
-      const scraped = await scrapeUrl(input);
-      rawInputText = scraped.body || scraped.title;
-      title = scraped.title;
+      const isVideoLink = /youtube\.com|youtu\.be|instagram\.com\/reel|facebook\.com\/watch|twitter\.com\/.*\/status|x\.com\/.*\/status/i.test(input);
+      if (isVideoLink) {
+        inputType = 'video';
+        const { processVideoInput } = require('../services/videoService');
+        rawInputText = await processVideoInput('url', input);
+        title = `Video Link: ${input.substring(0, 40)}...`;
+      } else {
+        inputType = 'url';
+        const scraped = await scrapeUrl(input);
+        rawInputText = scraped.body || scraped.title;
+        title = scraped.title;
+      }
     } else {
       title = input.length > 40 ? input.substring(0, 40) + '...' : input;
     }
 
-    // 1. Run Gemini NLP analysis (Entities, Claims, Sentiment, Bias, Source reputation)
-    const nlpMetrics = await analyzeText(rawInputText);
-
-    // 2. Cross-reference first claim against Fact-Checking registries
-    let factCheckCitations = [];
-    if (nlpMetrics.claims && nlpMetrics.claims.length > 0) {
-      factCheckCitations = await searchFactChecks(nlpMetrics.claims[0]);
-    }
-
-    // 3. Setup Weighted Metrics
-    let claimsScore = nlpMetrics.claimVerification || 60;
-    if (factCheckCitations.length > 0) {
-      // Adjust claim score dynamically if factcheck verdicts are found
-      const match = factCheckCitations[0].verdict.toLowerCase();
-      if (match.includes('false') || match.includes('debunked') || match.includes('misleading') || match.includes('गलत')) {
-        claimsScore = 10;
-      } else if (match.includes('true') || match.includes('credible') || match.includes('सही')) {
-        claimsScore = 95;
-      } else {
-        claimsScore = 45;
-      }
-    }
-
-    const metrics = {
-      sourceReputation: nlpMetrics.source ? nlpMetrics.source.score : 80,
-      biasScore: nlpMetrics.bias ? nlpMetrics.bias.score : 80,
-      claimVerification: claimsScore,
-      emotionScore: nlpMetrics.emotions ? nlpMetrics.emotions.score : 80,
-    };
-
-    // 4. Calculate weighted Trust Score
-    const { trustScore, verdict } = calculateTrustScore(metrics);
-
-    // 5. Generate bilingual explainable AI summaries
-    const explainableNarrative = await generateNarrative({
-      metrics: { ...metrics, trustScore },
-      extractedClaims: factCheckCitations,
-      verdict
-    });
+    // Call the modular Evidence Intelligence Engine
+    const dossier = await runEvidenceEngine(inputType, rawInputText);
 
     const analysis = new Analysis({
       userId: req.user ? req.user._id : undefined,
-      title,
-      rawInput: rawInputText.substring(0, 1000), // restrict length inside DB log
-      inputType: sourceUrl ? 'url' : 'text',
+      title: title || dossier.title,
+      rawInput: dossier.rawInput,
+      inputType: dossier.inputType,
       sourceUrl,
-      metrics: {
-        trustScore,
-        ...metrics
-      },
-      extractedClaims: factCheckCitations,
+      metrics: dossier.metrics,
+      decomposedClaims: dossier.decomposedClaims,
+      entities: dossier.entities,
+      evidenceCollected: dossier.evidenceCollected,
+      diversityProfile: dossier.diversityProfile,
+      contradictionReport: dossier.contradictionReport,
+      timeline: dossier.timeline,
+      badges: dossier.badges,
       sentimentAnalysis: {
-        dominantEmotion: nlpMetrics.emotions ? nlpMetrics.emotions.triggers.join(', ') : 'Objective',
-        sensationalismDetected: nlpMetrics.emotions ? nlpMetrics.emotions.score < 60 : false,
-        explanation: nlpMetrics.emotions ? nlpMetrics.emotions.explanation : ''
+        dominantEmotion: dossier.entities.quotes && dossier.entities.quotes.length > 0 ? 'Urgent' : 'Objective',
+        sensationalismDetected: dossier.metrics.emotionScore < 60,
+        explanation: 'Audited using Evidence Intelligence Engine.'
       },
-      explainableNarrative
+      explainableNarrative: dossier.explainableNarrative,
+      metadata: dossier.metadata
     });
 
     // Save to database only if user is logged in
@@ -123,6 +101,15 @@ const quickAnalysis = async (req, res, next) => {
       analysis,
     });
   } catch (error) {
+    if (error.requiresClarification) {
+      return res.status(409).json({
+        success: false,
+        requiresClarification: true,
+        subject: error.subject,
+        candidates: error.candidates,
+        message: "Multiple entity matches found. Clarification is required."
+      });
+    }
     next(error);
   }
 };
@@ -165,17 +152,30 @@ const deepAnalysis = async (req, res, next) => {
         inputType = 'pdf';
         rawTextPayload = await extractTextFromPdf(absoluteFilePath);
         title = `Document: ${req.file.originalname}`;
+      } else if (req.file.mimetype.startsWith('video/')) {
+        inputType = 'video';
+        const { processVideoInput } = require('../services/videoService');
+        rawTextPayload = await processVideoInput('file', req.file.originalname);
+        title = `Video Upload: ${req.file.originalname}`;
       } else {
         inputType = 'image';
         rawTextPayload = await extractTextFromImage(absoluteFilePath);
         title = `Screenshot OCR: ${req.file.originalname}`;
       }
     } else if (input && input.startsWith('http')) {
-      inputType = 'url';
       sourceUrl = input;
-      const scraped = await scrapeUrl(input);
-      rawTextPayload = scraped.body || scraped.title;
-      title = scraped.title;
+      const isVideoLink = /youtube\.com|youtu\.be|instagram\.com\/reel|facebook\.com\/watch|twitter\.com\/.*\/status|x\.com\/.*\/status/i.test(input);
+      if (isVideoLink) {
+        inputType = 'video';
+        const { processVideoInput } = require('../services/videoService');
+        rawTextPayload = await processVideoInput('url', input);
+        title = `Video Link: ${input.substring(0, 40)}...`;
+      } else {
+        inputType = 'url';
+        const scraped = await scrapeUrl(input);
+        rawTextPayload = scraped.body || scraped.title;
+        title = scraped.title;
+      }
     } else {
       title = input && input.length > 50 ? input.substring(0, 50) + '...' : 'Text Check';
     }
@@ -185,64 +185,30 @@ const deepAnalysis = async (req, res, next) => {
       throw new Error('Failed to parse or scrape text content from the input source.');
     }
 
-    // 2. Gemini semantic parsing
-    const nlpMetrics = await analyzeText(rawTextPayload);
-
-    // 3. Search and cross-reference first 2 extracted claims in parallel
-    let factCheckCitations = [];
-    if (nlpMetrics.claims && nlpMetrics.claims.length > 0) {
-      const searchPromises = nlpMetrics.claims.slice(0, 2).map(claim => searchFactChecks(claim));
-      const searchResults = await Promise.all(searchPromises);
-      // Flatten arrays and filter null values
-      factCheckCitations = searchResults.flat().filter(cite => cite !== undefined);
-    }
-
-    // 4. Setup scoring metrics
-    let claimsScore = nlpMetrics.claimVerification || 60;
-    if (factCheckCitations.length > 0) {
-      const verdicts = factCheckCitations.map(c => c.verdict.toLowerCase());
-      const hasFalse = verdicts.some(v => v.includes('false') || v.includes('debunked') || v.includes('misleading') || v.includes('गलत'));
-      const hasTrue = verdicts.every(v => v.includes('true') || v.includes('credible') || v.includes('सही'));
-
-      if (hasFalse) claimsScore = 12;
-      else if (hasTrue) claimsScore = 94;
-      else claimsScore = 48;
-    }
-
-    const metrics = {
-      sourceReputation: nlpMetrics.source ? nlpMetrics.source.score : 80,
-      biasScore: nlpMetrics.bias ? nlpMetrics.bias.score : 80,
-      claimVerification: claimsScore,
-      emotionScore: nlpMetrics.emotions ? nlpMetrics.emotions.score : 80,
-    };
-
-    // 5. Calculate final weighted trust score
-    const { trustScore, verdict } = calculateTrustScore(metrics);
-
-    // 6. Generate bilingual summaries
-    const explainableNarrative = await generateNarrative({
-      metrics: { ...metrics, trustScore },
-      extractedClaims: factCheckCitations,
-      verdict
-    });
+    // Call the modular Evidence Intelligence Engine coordinator
+    const dossier = await runEvidenceEngine(inputType, rawTextPayload);
 
     const analysis = new Analysis({
       userId: req.user ? req.user._id : undefined,
-      title,
-      rawInput: rawTextPayload.substring(0, 1500),
-      inputType,
+      title: title || dossier.title,
+      rawInput: dossier.rawInput,
+      inputType: dossier.inputType,
       sourceUrl,
-      metrics: {
-        trustScore,
-        ...metrics
-      },
-      extractedClaims: factCheckCitations,
+      metrics: dossier.metrics,
+      decomposedClaims: dossier.decomposedClaims,
+      entities: dossier.entities,
+      evidenceCollected: dossier.evidenceCollected,
+      diversityProfile: dossier.diversityProfile,
+      contradictionReport: dossier.contradictionReport,
+      timeline: dossier.timeline,
+      badges: dossier.badges,
       sentimentAnalysis: {
-        dominantEmotion: nlpMetrics.emotions ? nlpMetrics.emotions.triggers.join(', ') : 'Objective',
-        sensationalismDetected: nlpMetrics.emotions ? nlpMetrics.emotions.score < 60 : false,
-        explanation: nlpMetrics.emotions ? nlpMetrics.emotions.explanation : ''
+        dominantEmotion: dossier.entities.quotes && dossier.entities.quotes.length > 0 ? 'Urgent' : 'Objective',
+        sensationalismDetected: dossier.metrics.emotionScore < 60,
+        explanation: 'Audited using Evidence Intelligence Engine.'
       },
-      explainableNarrative
+      explainableNarrative: dossier.explainableNarrative,
+      metadata: dossier.metadata
     });
 
     if (req.user) {
@@ -259,9 +225,19 @@ const deepAnalysis = async (req, res, next) => {
       analysis,
     });
   } catch (error) {
-    // Make sure we delete local uploads in case of failures
+    // Clean local upload file if exists
     if (fileRelativePath) {
       cleanTempFile(fileRelativePath);
+    }
+    
+    if (error.requiresClarification) {
+      return res.status(409).json({
+        success: false,
+        requiresClarification: true,
+        subject: error.subject,
+        candidates: error.candidates,
+        message: "Multiple entity matches found. Clarification is required."
+      });
     }
     next(error);
   }
@@ -410,6 +386,90 @@ const uploadFile = async (req, res, next) => {
   }
 };
 
+const { buildRagContext } = require('../services/evidenceEngine/ragContextBuilder');
+const { orchestrateAiTask } = require('../services/aiOrchestrator');
+
+// @desc    Rewrite explanation narrative in specified persona style
+// @route   POST /api/v1/analysis/:id/explain-like
+// @access  Public
+const explainLike = async (req, res, next) => {
+  const { id } = req.params;
+  const { style } = req.body;
+
+  try {
+    if (!style) {
+      res.status(400);
+      throw new Error('Please specify an explainability persona style.');
+    }
+
+    const analysis = await Analysis.findById(id);
+    if (!analysis) {
+      res.status(404);
+      throw new Error('Analysis dossier not found.');
+    }
+
+    // Compile dynamic context
+    const ragContext = buildRagContext({
+      claims: analysis.decomposedClaims,
+      evidenceList: analysis.evidenceCollected,
+      verdict: analysis.verdict || 'Unverified',
+      confidenceDetails: analysis.confidenceDetails,
+      conflictResolution: {
+        conflictDetected: analysis.contradictionReport ? analysis.contradictionReport.conflictsDetected : false,
+        viewpoints: analysis.contradictionReport ? analysis.contradictionReport.summary : 'Consensus',
+        recommendation: analysis.contradictionReport ? analysis.contradictionReport.recommendation : 'N/A'
+      },
+      diversityProfile: analysis.diversityProfile
+    });
+
+    const prompt = `
+      You are an expert media literacy assistant. Grounding yourself strictly in the provided Verification Dossier Context, rewrite the explanation of this fact-check session.
+      
+      The explanation must be rewritten in the style of a: "${style.toUpperCase()}".
+      
+      Style Guides:
+      - CHILD: Use very simple language, relatable analogies (like a game or playground), no complex words, and explain it like a story to an 8-year old.
+      - STUDENT: Explain it clearly like a science project or class lesson, focusing on how we gathered clues and analyzed them.
+      - GENERAL PUBLIC: Clear, simple, and direct. Standard style for reading news.
+      - RESEARCHER: Detailed, analytical, objective, and scholarly. Reference metrics like Trust DNA, confidence percentage, and data coverage.
+      - JOURNALIST: Write in news headline style with a lead sentence, summarizing the investigation, and advising caution.
+      - DEVELOPER: Format it like a technical diagnostic log or code review audit. Use terms like nodes, latency, inputs, parsing, validation, and exceptions.
+
+      CRITICAL Hallucination Safeguard:
+      - Do NOT invent any new sources, citations, or facts.
+      - Use ONLY the facts present in the Verification Dossier Context.
+      
+      Verification Dossier Context:
+      ${ragContext}
+
+      Write two independent paragraphs.
+      Paragraph 1: English explanation in the requested style.
+      Paragraph 2: Hindi translation of the explanation in simple Devnagari script matching the requested style.
+
+      Output format:
+      ===ENGLISH===
+      [Your English text here]
+      ===HINDI===
+      [Your Hindi text here]
+    `;
+
+    const responseText = await orchestrateAiTask('explainableNarrative', prompt, false);
+    const parts = responseText.split('===HINDI===');
+    const englishPart = parts[0].replace('===ENGLISH===', '').trim();
+    const hindiPart = parts[1] ? parts[1].trim() : englishPart;
+
+    res.status(200).json({
+      success: true,
+      explanation: {
+        en: englishPart,
+        hi: hindiPart
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   quickAnalysis,
   deepAnalysis,
@@ -418,4 +478,5 @@ module.exports = {
   bookmarkAnalysis,
   getBookmarks,
   uploadFile,
+  explainLike,
 };

@@ -53,7 +53,7 @@ export default function Navbar() {
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent'
           }}>
-            TruthLens AI
+            VeriLens AI
           </span>
         </Link>
 

@@ -1,6 +1,10 @@
 // Load environment variables
 require('dotenv').config();
 
+// Override local router DNS for SRV queries
+const dns = require('dns');
+dns.setServers(['8.8.8.8', '8.8.4.4']);
+
 const app = require('./app');
 const connectDB = require('./config/db');
 

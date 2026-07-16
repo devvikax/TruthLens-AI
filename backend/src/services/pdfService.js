@@ -25,7 +25,7 @@ const extractTextFromPdf = async (pdfPath) => {
     return cleanedText;
   } catch (error) {
     console.error(`PDF Service Error: ${error.message}`);
-    throw new Error(`PDF text extraction failure: ${error.message}`);
+    throw new Error('This PDF file could not be parsed. It may be corrupted, encrypted, or lacks a readable text layer. Please convert it to a standard screenshot and try again.');
   }
 };
 
