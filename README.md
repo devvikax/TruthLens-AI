@@ -1,8 +1,8 @@
-# VeriLens AI - Professional Fact Verification Platform
+# TruthLens AI - Professional Fact Verification Platform
 
-VeriLens AI is a production-grade, end-to-end evidence-driven fact verification platform designed to verify information from multi-modal inputs (Text, URLs, PDF Documents, Images, and YouTube Videos) using real-time search engine failover groups, web crawlers, and advanced natural language processing.
+TruthLens AI is a production-grade, end-to-end evidence-driven fact verification platform designed to verify information from multi-modal inputs (Text, URLs, PDF Documents, Images, and YouTube Videos) using real-time search engine failover groups, web crawlers, and advanced natural language processing.
 
-Unlike simple search-snippet summarizers, VeriLens AI crawls the live web, extracts full-text articles, validates source relevance, checks primary source syndication, and performs mathematical confidence calculations before delivering transparent verdicts and explainable narratives.
+Unlike simple search-snippet summarizers, TruthLens AI crawls the live web, extracts full-text articles, validates source relevance, checks primary source syndication, and performs mathematical confidence calculations before delivering transparent verdicts and explainable narratives.
 
 ---
 
