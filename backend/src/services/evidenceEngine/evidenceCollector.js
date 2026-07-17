@@ -391,16 +391,18 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
           console.log(`- Crawling actual article: ${item.url}`);
           scrapedData = await scrapeUrl(item.url);
         } catch (err) {
-          return {
-            isValid: false,
-            reason: `Failed to scrape page content: ${err.message}`,
-            item
+          console.warn(`- Scraper blocked or failed for ${item.url}: ${err.message}. Falling back to search snippet.`);
+          scrapedData = {
+            title: item.title,
+            body: item.snippet || item.title,
+            metaDescription: ''
           };
+          item.isFallbackSnippet = true;
         }
       }
     }
 
-    const minBodyLen = skipCrawling ? 15 : 50;
+    const minBodyLen = (skipCrawling || item.isFallbackSnippet) ? 15 : 50;
     if (!scrapedData || !scrapedData.body || scrapedData.body.trim().length < minBodyLen) {
       return {
         isValid: false,
