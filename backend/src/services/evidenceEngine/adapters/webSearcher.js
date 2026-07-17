@@ -447,5 +447,8 @@ const searchWeb = async (query, limit = 5) => {
 };
 
 module.exports = {
-  searchWeb
+  searchWeb,
+  querySerper,
+  queryTavily,
+  queryBrave
 };

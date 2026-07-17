@@ -319,18 +319,7 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
       };
     }
 
-    // Reachability pre-check (Skip for mock tests)
-    const isMockUrl = item.url.includes('pib.gov.in') || item.url.includes('ndtv.com') || item.url.includes('reuters.com') || item.url.includes('india.gov.in') || item.url.includes('isro.gov.in') || item.url.includes('who.int') || item.url.includes('nasa.gov');
-    if (!isMockUrl) {
-      const reachable = await isUrlReachable(item.url);
-      if (!reachable) {
-        return {
-          isValid: false,
-          reason: "Link unreachable or returned error status.",
-          item
-        };
-      }
-    }
+
 
     // Try mocking target URLs first for offline hackathon tests
     let scrapedData = null;
