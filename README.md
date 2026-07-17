@@ -77,6 +77,12 @@ FACTCHECK_API_KEY=your_google_factcheck_api_key
 
 # Get a Brave Search API Key from Brave Developer Portal (https://api.search.brave.com/) to enable production-grade web search
 BRAVE_SEARCH_API_KEY=your_brave_search_api_key_here
+
+# Get a Serper Google Search API Key from Serper Portal (https://serper.dev/) - 2500 free queries on sign up
+SERPER_API_KEY=your_serper_api_key_here
+
+# Get a Tavily Search API Key from Tavily Portal (https://tavily.com/) - 1000 free queries on sign up
+TAVILY_API_KEY=your_tavily_api_key_here
 ```
 
 ### 3.3 Installation

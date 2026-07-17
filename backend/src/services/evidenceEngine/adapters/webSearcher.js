@@ -267,6 +267,102 @@ const queryWikipedia = async (query, limit = 3) => {
 };
 
 /**
+ * Serper API (Google Search - POST)
+ * Requires SERPER_API_KEY
+ */
+const querySerper = async (query, limit = 5) => {
+  const apiKey = process.env.SERPER_API_KEY;
+  if (!apiKey || apiKey === 'your_serper_api_key_here') {
+    throw new Error('Serper API Key not configured.');
+  }
+
+  const response = await fetch('https://google.serper.dev/search', {
+    method: 'POST',
+    headers: {
+      'X-API-KEY': apiKey,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      q: query,
+      num: limit
+    }),
+    signal: AbortSignal.timeout(6000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Serper HTTP Error status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const organic = data.organic || [];
+
+  return organic.map(item => {
+    let source = 'Serper Search';
+    try {
+      const parsed = new URL(item.link);
+      source = parsed.hostname.replace('www.', '');
+    } catch (e) {}
+
+    return {
+      title: item.title || 'Untitled',
+      url: item.link,
+      snippet: item.snippet || item.title || '',
+      source,
+      category: 'Category F: Live Web Search',
+      date: item.date || new Date().toISOString().split('T')[0]
+    };
+  });
+};
+
+/**
+ * Tavily Search API (POST)
+ * Requires TAVILY_API_KEY
+ */
+const queryTavily = async (query, limit = 5) => {
+  const apiKey = process.env.TAVILY_API_KEY;
+  if (!apiKey || apiKey === 'your_tavily_api_key_here') {
+    throw new Error('Tavily API Key not configured.');
+  }
+
+  const response = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      api_key: apiKey,
+      query: query,
+      max_results: limit
+    }),
+    signal: AbortSignal.timeout(6000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Tavily HTTP Error status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const results = data.results || [];
+
+  return results.map(item => {
+    let source = 'Tavily Search';
+    try {
+      const parsed = new URL(item.url);
+      source = parsed.hostname.replace('www.', '');
+    } catch (e) {}
+
+    return {
+      title: item.title || 'Untitled',
+      url: item.url,
+      snippet: item.content || item.title || '',
+      source,
+      category: 'Category F: Live Web Search',
+      date: new Date().toISOString().split('T')[0]
+    };
+  });
+};
+
+/**
  * Brave Search API (GET)
  * Requires BRAVE_SEARCH_API_KEY
  */
@@ -318,10 +414,12 @@ const queryBrave = async (query, limit = 5) => {
 
 /**
  * Web Search with automatic failover chain:
- * Brave Search API -> Bing -> Yahoo -> DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
+ * Serper API -> Tavily Search API -> Brave Search API -> Bing -> Yahoo -> DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
  */
 const searchWeb = async (query, limit = 5) => {
   const searchQueue = [
+    { name: 'Serper API', fn: () => querySerper(query, limit) },
+    { name: 'Tavily Search API', fn: () => queryTavily(query, limit) },
     { name: 'Brave Search API', fn: () => queryBrave(query, limit) },
     { name: 'Bing Search', fn: () => queryBing(query, limit) },
     { name: 'Yahoo Search', fn: () => queryYahoo(query, limit) },
