@@ -1,133 +1,171 @@
-# TruthLens-AI
+# VeriLens AI - Professional Fact Verification Platform
 
-> **Verify Any Claim. Trust Every Verdict.**
+VeriLens AI is a production-grade, end-to-end evidence-driven fact verification platform designed to verify information from multi-modal inputs (Text, URLs, PDF Documents, Images, and YouTube Videos) using real-time search engine failover groups, web crawlers, and advanced natural language processing.
 
-TruthLens-AI is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an interactive digital courtroom, it rejects monolithic "fake vs real" binary verdicts. Instead, it guides the user step-by-step through a transparent forensic investigation journey, exposing claim dossiers, dynamic Source Trust ratings, and the underlying mathematical confidence scores.
-
----
-
-## 1. Problem & Key Innovations
-
-### 1.1 The Problem
-Traditional fake-news detectors suffer from:
-1.  **Immediate Verdict Bias**: Telling a user something is "Fake" immediately triggers defensiveness. Guided evidentiary journeys build trust.
-2.  **Opacity & Hallucinations**: Standard LLMs give opinions about truth based on stale training weights, generating plausible-sounding hallucinations without traceable citations.
-3.  **Source Duplication**: Syndicated wire reports (e.g. AP/Reuters republishers) inflate search statistics, causing false consensus.
-
-### 1.2 Key Innovations
-*   **AI Courtroom**: Results are presented as a forensic case. Users explore the **Prosecution** (evidence against), **Defense** (evidence supporting), and the **Judge's logic** explaining why sources were weighed or ignored.
-*   **Dynamic Verification Strategy Selector**: The engine automatically classifies claims into 19 categories (e.g. Death, Medical, Space, etc.) and routes adapters accordingly, dynamically adjusting source trust weights and filtering false positives.
-*   **Developer Telemetry Console**: Access a hidden, forensic-grade debugging sandbox at `/developer` to inspect original inputs, normalized statements, queries, discarded sources, and raw LLM traces.
-*   **Decoupled Multi-Layer Retrieval**: Parallel semantic, keyword, and entity search adapters query fact-check registries, academic repositories, and live search engines concurrently.
-*   **Parallel Full-Text Article Extraction**: Instead of validating search snippets (which can easily lead to false consensus), the retrieval engine crawls candidate web URLs in parallel, extracts clean text content (filtering ads, boilerplate, and headers), and validates it using semantic context and entity checks.
-*   **Source Trust Registry (STR)**: A persistent DB-backed registry mapping domain categorization and credibility weighting factors.
-*   **Multi-Stage Confidence DNA**: Confidence is resolved across 5 component validation gates (Entity, Claim, Retrieval, Evidence, and Verdict) using the formula:
-    $$\text{Overall} = \text{Entity} \cdot 15\% + \text{Claim} \cdot 15\% + \text{Retrieval} \cdot 20\% + \text{Evidence} \cdot 25\% + \text{Verdict} \cdot 25\%$$
-*   **PWA Installable**: Fully compatible Progressive Web App manifest for standalone mobile/desktop usage.
+Unlike simple search-snippet summarizers, VeriLens AI crawls the live web, extracts full-text articles, validates source relevance, checks primary source syndication, and performs mathematical confidence calculations before delivering transparent verdicts and explainable narratives.
 
 ---
 
-## 2. Architecture & File Structure
+## 🛠️ Architecture
+
+```mermaid
+graph TD
+    Input[Plain Text / URL / PDF / Image / YouTube] -->|Forensic Extraction| Parser[OCR / PDF Parser / Timed Transcript Scraper]
+    Parser -->|Claim Decomposition| NLP[Claim Understanding Engine]
+    NLP -->|Bidirectional Query Gen| Queries[Query Intelligence Engine]
+    Queries -->|Search Failover Queue| Search[Serper Google API / Tavily API / Brave Search API]
+    Search -->|Discovered URLs| Crawler[Full-Text Crawler & Scraper]
+    Crawler -->|Raw Article Texts| Validator[8-Dimensional Source Relevance & Quality Scorecard]
+    Validator -->|Validated Evidence| Consensus[Consensus, Conflict, & Contradiction Engines]
+    Consensus -->|Evidence Graph & Metrics| Verdict[Verdict Engine & Confidence synthethizer]
+    Verdict --> Dashboard[XAI Courtroom Dashboard / Explainable Narrative]
+```
+
+---
+
+## 🚀 Features
+
+*   **Multi-Modal Forensic Extraction**: Scans plain text, parses raw PDF text layers, runs Tesseract OCR on images/screenshots, and crawls YouTube player source to scrape timed video transcripts.
+*   **Production-Grade Web Search Failover**: Cascades query execution across Serper (Google Search API) $\rightarrow$ Tavily Search API $\rightarrow$ Brave Search API $\rightarrow$ Scraped Bing $\rightarrow$ Yahoo $\rightarrow$ DuckDuckGo $\rightarrow$ Wikipedia API.
+*   **Full-Text Article Crawler**: Visits discovered URLs, bypasses Cloudflare/CDN rate limits, strips boilerplate navigation/footers, and extracts clean, substantial body text.
+*   **8-Dimensional Quality Scorecard**: Dynamically scores source reliability, original reporting, freshness, transparency, authority, entity match, claim match, and evidence strength.
+*   **Bilingual Narrative & Verdicts**: Generates objective verdicts (Likely Genuine, Likely Misleading, Needs Verification) and detailed English/Hindi narratives.
+*   **XAI Courtroom Dashboard**: Rich interactive visualization featuring dynamic trust gauges, interactive evidence link networks, conflict resolution meters, and a developer sandbox.
+
+---
+
+## 💻 Tech Stack
+
+| Component | Technology | Description |
+| :--- | :--- | :--- |
+| **Frontend** | React (Vite), Zustand, CSS variables | Lightweight SPA, reactive state client |
+| **Backend** | Node.js, Express, Nodemon | RESTful API dispatcher & orchestrator |
+| **Database** | MongoDB Atlas, Mongoose | Schema validation and analysis caching |
+| **NLP & LLM** | OpenRouter (Gemini 2.5 Flash / custom fallbacks) | Claim decomposition, consensus evaluations |
+| **Forensics** | Tesseract.js, `pdf-parse`, timed YouTube scrapers | Image OCR, PDF layer parsing, transcript extraction |
+
+---
+
+## 🧠 AI & Verification Pipeline
+
+1.  **Claim Understanding**: Categorizes claim types (Sports, Health, Politics, etc.) and determines factual checkability.
+2.  **Entity Resolution**: Isolates key nouns, places, and events to check alignment.
+3.  **Query Generation**: Generates positive, negative, and official verification queries.
+4.  **Consensus and Conflict Engines**: Computes stance ratios, flags source contradictions, and adjusts trust weightings.
+5.  **Confidence Synthesis**: Synthesizes confidence scores based on entity overlap, source reputation, and evidence consistency.
+
+---
+
+## 🌐 APIs Used
+
+1.  **Google Serper API** (`https://google.serper.dev/search`): Primary Google Search results provider.
+2.  **Tavily Search API** (`https://api.tavily.com/search`): Professional AI web search provider.
+3.  **Brave Search API** (`https://api.search.brave.com/`): Alternative web search provider.
+4.  **OpenRouter API** (`https://openrouter.ai/api/v1`): LLM dispatcher for claims classification and evaluation.
+
+---
+
+## 📂 Folder Structure
 
 ```
+TruthLens-AI/
 ├── backend/
 │   ├── src/
-│   │   ├── controllers/      # Request handlers (analysis, chat, authentication)
-│   │   ├── middleware/       # Rate limiters, security parameters, error boundaries
-│   │   ├── models/           # Mongoose schemas (Analysis, SourceRegistry, User)
-│   │   ├── routes/           # REST endpoints
+│   │   ├── config/             # DB and client setups
+│   │   ├── controllers/        # REST controllers (analysis, chat)
+│   │   ├── middleware/         # Rate limiting, central error boundaries
+│   │   ├── models/             # Schema logs (Analysis, SourceRegistry)
+│   │   ├── routes/             # REST route registration
 │   │   ├── services/
-│   │   │   ├── evidenceEngine/
-│   │   │   │   ├── adapters/ # Decoupled search crawlers (news, government, academic)
-│   │   │   │   ├── index.js  # Modular Evidence Engine coordinator
-│   │   │   ├── aiOrchestrator.js # Task router with exponential failover retries
-│   │   │   ├── videoService.js   # Whisper transcription & Keyframe OCR parser
-│   │   └── server.js         # Port listener & Atlas database triggers
+│   │   │   └── evidenceEngine/ # Core validation engine, consensus adapters
+│   │   │   └── geminiService.js# LLM orchestration and NLP fallbacks
+│   │   │   └── videoService.js # timed transcript scrapers
+│   │   └── server.js           # API entry point
+│   ├── .env.example
+│   └── package.json
 └── frontend/
-    ├── public/               # Static assets & PWA manifest.json
     ├── src/
-    │   ├── components/       # TrustGauge, Navigation bar, Footers, Upload zones
-    │   ├── store/            # Zustands global data stores
-    │   ├── pages/
-    │   │   ├── Analysis.jsx  # Submission form & Curated Demo Mode sandboxes
-    │   │   ├── Results.jsx   # XAI Courtroom dashboards & persona switchers
+    │   ├── components/         # Shared views (Navbar, Footer, TrustGauge)
+    │   ├── pages/              # SPA views (Home, Analysis, Results, History)
+    │   ├── store/              # Zustand global state (analysisStore)
+    │   └── main.jsx            # client entry
+    ├── vite.config.js
+    └── package.json
 ```
 
 ---
 
-## 3. Getting Started Locally
+## ⚙️ Installation & Running Locally
 
-### 3.1 Prerequisites
+### 1. Prerequisites
 *   Node.js (v18 or higher)
-*   MongoDB (local instance or MongoDB Atlas account)
+*   MongoDB (local instance or MongoDB Atlas)
 
-### 3.2 Environment Setup
+### 2. Environment Variables
 Create a `.env` file in the `backend/` directory:
 ```env
 PORT=5000
-MONGODB_URI=mongodb+srv://...
-JWT_SECRET=your_super_secret_jwt_key
+MONGODB_URI=mongodb://localhost:27017/truthlens
 NODE_ENV=development
 
-# Get a free GEMINI_API_KEY from Google AI Studio (https://aistudio.google.com/) - 100% free with no credit card required
-GEMINI_API_KEY=your_google_gemini_api_key
+# LLM Orchestrator
+OPENROUTER_API_KEY=your_openrouter_api_key_here
 
-# Get a FACTCHECK_API_KEY from Google Developer Console to use Google Fact Check Tools (optional)
-FACTCHECK_API_KEY=your_google_factcheck_api_key
-
-# Get a Brave Search API Key from Brave Developer Portal (https://api.search.brave.com/) to enable production-grade web search
-BRAVE_SEARCH_API_KEY=your_brave_search_api_key_here
-
-# Get a Serper Google Search API Key from Serper Portal (https://serper.dev/) - 2500 free queries on sign up
+# Production Search Providers (Get keys from respective portals)
 SERPER_API_KEY=your_serper_api_key_here
-
-# Get a Tavily Search API Key from Tavily Portal (https://tavily.com/) - 1000 free queries on sign up
 TAVILY_API_KEY=your_tavily_api_key_here
+BRAVE_SEARCH_API_KEY=your_brave_search_api_key_here
 ```
 
-### 3.3 Installation
+### 3. Install Dependencies
 ```bash
-# Install backend dependencies
+# Backend dependencies
 cd backend
 npm install
 
-# Install frontend dependencies
+# Frontend dependencies
 cd ../frontend
 npm install
 ```
 
-### 3.4 Running the Application
+### 4. Run Application
 ```bash
-# Start backend dev server (from backend directory)
+# Start backend (from backend/)
 npm run dev
 
-# Start frontend dev client (from frontend directory)
+# Start frontend (from frontend/)
 npm run dev
 ```
 
 ---
 
-## 4. Production Deployment
+## 🔒 Security & Performance Optimizations
 
-### 4.1 Frontend (Vercel)
-The client includes `vercel.json` to handle client-side routes. Deploy to Vercel via:
-```bash
-cd frontend
-vercel
-```
-
-### 4.2 Backend (Render / Railway)
-Set environment variables on Render/Railway. The server is configured to automatically serve static folders and bind dynamic ports.
+*   **JWT & Rate Limiting**: Centralized Express rate limiters protect the API endpoints from crawler spam.
+*   **Security Headers**: Integrated `helmet` and `cors` to defend against XSS, injection, and unauthorized frame inclusions.
+*   **Search Caching**: Implemented index-based caching of search and fact-check results to optimize query budgets.
+*   **Scraper Boilerplate Filtering**: Removes scripts, styles, header tags, navigation structures, and ads before passing text payloads to evaluation pipelines, minimizing LLM input token usage.
 
 ---
 
-## 5. Technology Stack
-*   **Frontend**: React (Vite), TailwindCSS-compatible CSS variables, Lucide icons, Zustands.
-*   **Backend**: Node.js, Express, Multer, Helmet, Compression.
-*   **Database**: MongoDB Atlas, Mongoose.
-*   **Forensics**: Tesseract OCR (Image scanning), `pdf-parse` (Document text layers), Whisper/AI-grounded timeline generators (Videos).
+## 🛠️ Developer Sandbox
+
+The frontend includes a **Developer Sandbox** (`/developer`) allowing engineers to:
+*   Inject raw mock data to test edge-case verdicts.
+*   Inspect exact JSON response models returned by the evidence validator.
+*   Tune reliability threshold boundaries and view real-time confidenceSynthesizer changes.
 
 ---
 
-## 6. License
-Distributed under the MIT License. See `LICENSE` for details.
+## 📝 FAQ & Troubleshooting
+
+#### Q: The analysis is returning mock responses.
+*   **A**: If your OpenRouter credentials are empty or out of credits, the system triggers local rule-based NLP fallbacks to keep processing claims. Verify your `OPENROUTER_API_KEY` status.
+
+#### Q: How does YouTube transcript scraping work without the YouTube API?
+*   **A**: It downloads the video's initial player HTML source, extracts the `ytInitialPlayerResponse` JSON object, and fetches the timed transcript segments directly using page crawlers.
+
+---
+
+## 📄 License
+This project is licensed under the MIT License. See `LICENSE` for details.

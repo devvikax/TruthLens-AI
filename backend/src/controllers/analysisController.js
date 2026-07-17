@@ -4,7 +4,6 @@ const fs = require('fs');
 // Model Imports
 const Analysis = require('../models/Analysis');
 const UploadedFile = require('../models/UploadedFile');
-const Bookmark = require('../models/Bookmark');
 
 // Service Imports
 const { scrapeUrl } = require('../services/scraperService');
@@ -254,22 +253,13 @@ const deepAnalysis = async (req, res, next) => {
 // @access  Private
 const getHistory = async (req, res, next) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-
-    const count = await Analysis.countDocuments({ userId: req.user._id });
-    const history = await Analysis.find({ userId: req.user._id })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit);
-
+    // In guest mode, history is managed entirely on client side
     res.status(200).json({
       success: true,
-      page,
-      pages: Math.ceil(count / limit),
-      count,
-      history,
+      page: 1,
+      pages: 1,
+      count: 0,
+      history: [],
     });
   } catch (error) {
     next(error);
@@ -281,18 +271,6 @@ const getHistory = async (req, res, next) => {
 // @access  Private
 const deleteHistory = async (req, res, next) => {
   try {
-    const analysis = await Analysis.findOneAndDelete({
-      _id: req.params.id,
-      userId: req.user._id
-    });
-
-    if (!analysis) {
-      res.status(404);
-      throw new Error('Verification record not found or unauthorized');
-    }
-
-    await Bookmark.deleteMany({ userId: req.user._id, analysisId: req.params.id });
-
     res.status(200).json({
       success: true,
       message: 'Verification record deleted from history log',
@@ -307,27 +285,7 @@ const deleteHistory = async (req, res, next) => {
 // @access  Private
 const bookmarkAnalysis = async (req, res, next) => {
   try {
-    const analysis = await Analysis.findById(req.params.id);
-    if (!analysis) {
-      res.status(404);
-      throw new Error('Analysis report not found');
-    }
-
-    const bookmarked = await Bookmark.findOne({
-      userId: req.user._id,
-      analysisId: req.params.id
-    });
-
-    if (bookmarked) {
-      await bookmarked.deleteOne();
-      res.status(200).json({ success: true, isBookmarked: false, message: 'Bookmark removed' });
-    } else {
-      await Bookmark.create({
-        userId: req.user._id,
-        analysisId: req.params.id
-      });
-      res.status(200).json({ success: true, isBookmarked: true, message: 'Bookmark added' });
-    }
+    res.status(200).json({ success: true, isBookmarked: true, message: 'Bookmark state updated' });
   } catch (error) {
     next(error);
   }
@@ -338,13 +296,9 @@ const bookmarkAnalysis = async (req, res, next) => {
 // @access  Private
 const getBookmarks = async (req, res, next) => {
   try {
-    const bookmarks = await Bookmark.find({ userId: req.user._id })
-      .populate('analysisId')
-      .sort({ createdAt: -1 });
-
     res.status(200).json({
       success: true,
-      bookmarks: bookmarks.map(b => b.analysisId).filter(a => a !== null),
+      bookmarks: [],
     });
   } catch (error) {
     next(error);

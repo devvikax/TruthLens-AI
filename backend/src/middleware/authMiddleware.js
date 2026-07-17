@@ -1,5 +1,4 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+
 
 // Protect routes - requires valid JWT (Bypassed)
 const protect = async (req, res, next) => {

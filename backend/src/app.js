@@ -8,8 +8,6 @@ const path = require('path');
 const mongoose = require('mongoose');
 
 // Route Imports
-const authRoutes = require('./routes/authRoutes');
-const userRoutes = require('./routes/userRoutes');
 const analysisRoutes = require('./routes/analysisRoutes');
 const chatRoutes = require('./routes/chatRoutes');
 const healthRoutes = require('./routes/healthRoutes');
@@ -56,9 +54,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 // Apply General Rate Limiter to API Prefix
 app.use('/api/v1', apiLimiter);
 
-// REST Routers Mapping (Auth and Users routes disabled/removed)
-// app.use('/api/v1/auth', authRoutes);
-// app.use('/api/v1/users', userRoutes);
+// REST Routers Mapping
 app.use('/api/v1/analysis', analysisRoutes);
 app.use('/api/v1/chat', chatRoutes);
 
