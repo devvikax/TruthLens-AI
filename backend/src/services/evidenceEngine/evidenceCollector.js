@@ -375,21 +375,33 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
       };
     }
 
+    const skipCrawling = process.env.SKIP_CRAWLING === 'true' || process.env.VERCEL === '1';
+
     // Crawl live if not matched in mocks
     if (!scrapedData) {
-      try {
-        console.log(`- Crawling actual article: ${item.url}`);
-        scrapedData = await scrapeUrl(item.url);
-      } catch (err) {
-        return {
-          isValid: false,
-          reason: `Failed to scrape page content: ${err.message}`,
-          item
+      if (skipCrawling) {
+        console.log(`- Vercel/Fast Mode: Skipping crawler for ${item.url}. Using search snippet.`);
+        scrapedData = {
+          title: item.title,
+          body: item.snippet || item.title,
+          metaDescription: ''
         };
+      } else {
+        try {
+          console.log(`- Crawling actual article: ${item.url}`);
+          scrapedData = await scrapeUrl(item.url);
+        } catch (err) {
+          return {
+            isValid: false,
+            reason: `Failed to scrape page content: ${err.message}`,
+            item
+          };
+        }
       }
     }
 
-    if (!scrapedData || !scrapedData.body || scrapedData.body.trim().length < 50) {
+    const minBodyLen = skipCrawling ? 15 : 50;
+    if (!scrapedData || !scrapedData.body || scrapedData.body.trim().length < minBodyLen) {
       return {
         isValid: false,
         reason: "Failed to parse clean, substantial body text from page.",
