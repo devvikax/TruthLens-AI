@@ -222,35 +222,7 @@ Think Before You Share. Ground truth verified at TruthLens-AI.`;
 
 
 
-          {/* Explain Like Persona Switcher Pills */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-muted)' }}>
-              {language === 'en' ? 'Explain Like:' : 'स्पष्टीकरण शैली:'}
-            </span>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {['child', 'student', 'general', 'researcher', 'journalist', 'developer'].map((style) => (
-                <button
-                  key={style}
-                  onClick={() => handlePersonaChange(style)}
-                  disabled={loadingPersona}
-                  style={{
-                    padding: '4px 10px',
-                    fontSize: '0.78rem',
-                    borderRadius: 'var(--radius-full)',
-                    border: '1px solid var(--border-color)',
-                    backgroundColor: persona === style ? 'var(--color-primary)' : 'var(--bg-tertiary)',
-                    color: persona === style ? 'black' : 'var(--text-primary)',
-                    cursor: 'pointer',
-                    fontWeight: 600,
-                    textTransform: 'capitalize',
-                    transition: 'all 0.2s ease'
-                  }}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
+
 
           {/* Dynamic Explanation Paragraph */}
           <div style={{ position: 'relative' }}>
