@@ -19,8 +19,8 @@ module.exports = {
 
   // Connection & Timeout specifications (in milliseconds)
   timeouts: {
-    openrouter: 30000,
-    gemini: 15000,
+    openrouter: 8000,
+    gemini: 8000,
     tesseract: 20000,
     scraper: 8000
   },

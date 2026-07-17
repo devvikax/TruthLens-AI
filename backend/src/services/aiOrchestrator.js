@@ -171,6 +171,13 @@ const orchestrateAiTask = async (taskName, prompt, isJson = false) => {
 
         console.warn(`[Warning] Attempt ${attempt} failed with error: ${err.message}.`);
         
+        const errMsg = err.message || '';
+        const isClientAuthError = errMsg.includes('402') || errMsg.includes('401') || errMsg.includes('403');
+        if (isClientAuthError) {
+          console.warn(`[Warning] Client credentials or billing error (401/402/403) detected. Skipping retrying.`);
+          break;
+        }
+
         if (attempt < aiConfig.retries.maxAttempts) {
           // Pause with exponential backoff before retrying
           console.log(`- Pausing for ${delay}ms before retry...`);
