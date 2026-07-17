@@ -82,7 +82,7 @@ const executeGeminiSDK = async (prompt, isJson, timeoutLimit) => {
 const executeGroq = async (prompt, isJson, timeoutLimit) => {
   const messages = [{ role: 'user', content: prompt }];
   const apiKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',

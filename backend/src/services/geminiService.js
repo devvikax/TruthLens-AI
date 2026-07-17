@@ -28,7 +28,7 @@ const isOpenRouterConfigured = () => {
  */
 const queryGroq = async (messages, isJson = false) => {
   const apiKey = process.env.GROQ_API_KEY;
-  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+  const model = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
