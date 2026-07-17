@@ -220,58 +220,7 @@ Think Before You Share. Ground truth verified at TruthLens-AI.`;
             {title}
           </h2>
 
-          {/* Step 9 UI Improvements: Verification Strategy Metadata Panel */}
-          {currentAnalysis.metadata && (
-            <div style={{
-              backgroundColor: 'rgba(59, 130, 246, 0.03)',
-              border: '1px solid rgba(59, 130, 246, 0.15)',
-              borderRadius: 'var(--radius-md)',
-              padding: 'var(--space-md)',
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-              gap: 'var(--space-md)',
-              fontSize: '0.85rem'
-            }}>
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  Claim Category
-                </span>
-                <span style={{ fontWeight: 700, color: 'var(--color-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <Award size={14} />
-                  {currentAnalysis.metadata.claimCategory || 'General Claim'}
-                </span>
-              </div>
-              
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  Strategy Activated
-                </span>
-                <span style={{ fontWeight: 600, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <Activity size={14} />
-                  {currentAnalysis.metadata.verificationStrategy || 'General Verification'}
-                </span>
-              </div>
 
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  Sources Prioritized
-                </span>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>
-                  {currentAnalysis.metadata.prioritizedSources || 'Factcheck registries, Live Search'}
-                </span>
-              </div>
-
-              <div>
-                <span style={{ display: 'block', fontSize: '0.72rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
-                  Pipeline Route
-                </span>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
-                  <Compass size={14} color="var(--color-success)" />
-                  {currentAnalysis.metadata.pipelineSelected || 'Dynamic RAV Engine v2'}
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Explain Like Persona Switcher Pills */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
