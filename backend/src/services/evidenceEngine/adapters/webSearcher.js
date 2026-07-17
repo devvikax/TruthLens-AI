@@ -267,11 +267,62 @@ const queryWikipedia = async (query, limit = 3) => {
 };
 
 /**
+ * Brave Search API (GET)
+ * Requires BRAVE_SEARCH_API_KEY
+ */
+const queryBrave = async (query, limit = 5) => {
+  const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+  if (!apiKey || apiKey === 'your_brave_search_api_key_here') {
+    throw new Error('Brave Search API Key not configured.');
+  }
+
+  const url = new URL('https://api.search.brave.com/res/v1/web/search');
+  url.search = new URLSearchParams({
+    q: query,
+    count: limit.toString()
+  }).toString();
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Accept': 'application/json',
+      'X-Subscription-Token': apiKey
+    },
+    signal: AbortSignal.timeout(6000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Brave Search HTTP Error status ${response.status}`);
+  }
+
+  const data = await response.json();
+  const rawResults = (data.web && data.web.results) || [];
+  
+  return rawResults.map(item => {
+    let source = 'Brave Search';
+    try {
+      const parsed = new URL(item.url);
+      source = parsed.hostname.replace('www.', '');
+    } catch (e) {}
+
+    return {
+      title: item.title || 'Untitled',
+      url: item.url,
+      snippet: item.description || item.title || '',
+      source,
+      category: 'Category F: Live Web Search',
+      date: item.page_age || new Date().toISOString().split('T')[0]
+    };
+  });
+};
+
+/**
  * Web Search with automatic failover chain:
- * Bing -> Yahoo -> DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
+ * Brave Search API -> Bing -> Yahoo -> DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
  */
 const searchWeb = async (query, limit = 5) => {
   const searchQueue = [
+    { name: 'Brave Search API', fn: () => queryBrave(query, limit) },
     { name: 'Bing Search', fn: () => queryBing(query, limit) },
     { name: 'Yahoo Search', fn: () => queryYahoo(query, limit) },
     { name: 'DuckDuckGo Lite', fn: () => queryDdgLite(query, limit) },

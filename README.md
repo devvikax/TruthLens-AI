@@ -74,6 +74,9 @@ GEMINI_API_KEY=your_google_gemini_api_key
 
 # Get a FACTCHECK_API_KEY from Google Developer Console to use Google Fact Check Tools (optional)
 FACTCHECK_API_KEY=your_google_factcheck_api_key
+
+# Get a Brave Search API Key from Brave Developer Portal (https://api.search.brave.com/) to enable production-grade web search
+BRAVE_SEARCH_API_KEY=your_brave_search_api_key_here
 ```
 
 ### 3.3 Installation
