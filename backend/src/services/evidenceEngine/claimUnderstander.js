@@ -155,7 +155,7 @@ const getFallbackClaimMetadata = (text) => {
   let normalizedClaim = text;
   let claimType = 'Social Media Rumor';
   let categories = ['Social Media Rumor'];
-  let subject = 'Unknown';
+  let subject = extractSubject(text, claimType);
   let predicate = 'unknown';
   let object = 'none';
   let event = 'none';
@@ -225,7 +225,7 @@ const getFallbackClaimMetadata = (text) => {
     isVerifiableFactualClaim = true;
   }
   // 5. Sports
-  else if (lowerText.includes('virat') || lowerText.includes('kohli') || lowerText.includes('retired') || lowerText.includes('fifa') || lowerText.includes('cricket') || lowerText.includes('football') || lowerText.includes('championship')) {
+  else if (lowerText.includes('virat') || lowerText.includes('kohli') || lowerText.includes('retired') || lowerText.includes('fifa') || lowerText.includes('cricket') || lowerText.includes('football') || lowerText.includes('championship') || lowerText.includes('ipl') || lowerText.includes('wpl') || lowerText.includes('rcb') || lowerText.includes('csk') || lowerText.includes('mi') || lowerText.includes('kkr') || lowerText.includes('srh') || lowerText.includes('sports') || lowerText.includes('match') || lowerText.includes('league') || lowerText.includes('tournament') || lowerText.includes('won') || lowerText.includes('wins') || lowerText.includes('lost') || lowerText.includes('loses') || lowerText.includes('cup')) {
     normalizedClaim = text;
     claimType = "Sports";
     categories = ["Sports", "Social Media Rumor"];
