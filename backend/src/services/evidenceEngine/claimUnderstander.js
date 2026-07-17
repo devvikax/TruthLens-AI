@@ -103,7 +103,15 @@ const extractSubject = (text, category) => {
   for (const marker of sportsMarkers) {
     if (lower.includes(marker)) {
       const idx = lower.indexOf(marker);
-      const namePart = clean.substring(0, idx).trim();
+      let namePart = clean.substring(0, idx).trim();
+      
+      const auxiliaryVerbs = ['has', 'is', 'was', 'have', 'had', 'been', 'will', 'would', 'could', 'should', 'can'];
+      const words = namePart.split(/\s+/);
+      if (words.length > 1 && auxiliaryVerbs.includes(words[words.length - 1].toLowerCase())) {
+        words.pop();
+        namePart = words.join(' ');
+      }
+      
       if (namePart.length > 2) {
         return namePart;
       }
@@ -221,7 +229,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = text;
     claimType = "Sports";
     categories = ["Sports", "Social Media Rumor"];
-    subject = lowerText.includes('virat') || lowerText.includes('kohli') ? "Virat Kohli" : lowerText.includes('fifa') ? "India National Football Team" : extractSubject(text, claimType);
+    subject = lowerText.includes('virat') || lowerText.includes('kohli') ? "Virat Kohli" : (lowerText.includes('india') && lowerText.includes('fifa')) ? "India National Football Team" : extractSubject(text, claimType);
     predicate = lowerText.includes('retir') ? "retired" : "active/won";
     event = lowerText.includes('retir') ? "retirement" : "playing";
     intent = "Verify this sports event, retirement, or match result.";

@@ -74,6 +74,7 @@ const AnalysisSchema = new mongoose.Schema(
         reliabilityScore: { type: Number },
         isOfficial: { type: Boolean },
         isTrusted: { type: Boolean },
+        stance: { type: String },
         explanation: { type: String },
         primarySource: {
           isOriginal: { type: Boolean },

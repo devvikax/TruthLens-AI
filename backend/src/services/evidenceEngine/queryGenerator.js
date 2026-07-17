@@ -99,12 +99,12 @@ const getFallbackQueries = (claimMetadata) => {
 
   if (claimType === 'Sports') {
     return {
-      officialVerification: `BCCI FIFA official squad announcement ${subject}`,
-      factCheck: `${subject} retirement transfer rumor factcheck`,
-      positiveEvidence: `${subject} match results league standings`,
-      negativeEvidence: `${subject} playing next match squad roster`,
-      latestNews: `${subject} post match press conference interview`,
-      entitySpecific: `${subject} official athlete social media handles`
+      officialVerification: `${subject} official sports announcement results`,
+      factCheck: `${subject} factcheck check debunk rumor`,
+      positiveEvidence: `${subject} match results cup championship victory`,
+      negativeEvidence: `${subject} status roster squad updates`,
+      latestNews: `${subject} latest press release news`,
+      entitySpecific: `${subject} official statements verified`
     };
   }
 
