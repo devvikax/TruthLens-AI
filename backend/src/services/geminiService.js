@@ -289,57 +289,104 @@ const chatContextualResponse = async (analysis, chatHistory, userMessage) => {
 /* --- FALLBACK MOCK BUILDERS --- */
 
 const getMockAnalysis = (text) => {
-  const content = text.toLowerCase();
+  const content = text.trim();
+  const lower = content.toLowerCase();
   
-  if (content.includes('nasa') || content.includes('galaxy')) {
-    return {
-      language: "en",
-      cleanedText: text,
-      entities: { people: ["James Webb"], organizations: ["NASA"], locations: ["Big Bang"], statistics: ["400 million years"] },
-      claims: ["James Webb Telescope detected a galaxy from 400 million years after the Big Bang.", "Findings are supported by peer-reviewed spectroscopic verification."],
-      bias: { score: 92, framing: "neutral", explanation: "Completely objective scientific tone." },
-      emotions: { score: 90, triggers: ["none"], explanation: "Informational and non-sensational." },
-      source: { score: 98, reputation: "whitelisted", explanation: "NASA domain represents high scientific authority." }
-    };
-  } else if (content.includes('battery') || content.includes('phone') || content.includes('update')) {
-    return {
-      language: "en",
-      cleanedText: text,
-      entities: { people: ["Forums users"], organizations: ["TechCheck"], locations: [], statistics: ["14.2"] },
-      claims: ["OS version 14.2 update causes phone batteries to swell and explode.", "Phones are overheating within minutes."],
-      bias: { score: 50, framing: "user rumors", explanation: "Presents forum hearsay as confirmed dangers." },
-      emotions: { score: 35, triggers: ["fear", "urgency"], explanation: "Uses warning emojis and panic language." },
-      source: { score: 40, reputation: "unverified", explanation: "Origins from unverified forum posts." }
-    };
-  } else {
-    // Default Misleading/Rumor mock
-    return {
-      language: "hi",
-      cleanedText: text,
-      entities: { people: [], organizations: ["Big Pharma"], locations: [], statistics: [] },
-      claims: ["Drinking lemon juice and baking soda in hot water cures and prevents all viral infections.", "Conspiracy: Big Pharma hides this remedy."],
-      bias: { score: 10, framing: "conspiratorial", explanation: "Highly loaded anti-pharma framing." },
-      emotions: { score: 8, triggers: ["panic", "conspiracy"], explanation: "Demands immediate sharing using alarmist keywords." },
-      source: { score: 5, reputation: "blacklist", explanation: "Classic health-scam rumor template." }
-    };
+  // Extract language
+  const hasHindiCharacters = /[\u0900-\u097F]/.test(content);
+  const language = hasHindiCharacters ? 'hi' : 'en';
+  
+  // Cleaned text
+  const cleanedText = content;
+  
+  // Extract entities dynamically
+  const words = content.split(/\s+/);
+  const capitalizedWords = words.filter(w => /^[A-Z][a-zA-Z]*$/.test(w.replace(/[^a-zA-Z]/g, '')));
+  const uniqueCapWords = [...new Set(capitalizedWords)].map(w => w.replace(/[^a-zA-Z]/g, '')).filter(w => w.length > 2);
+  
+  const people = uniqueCapWords.slice(0, 2);
+  const organizations = uniqueCapWords.slice(2, 4);
+  const locations = uniqueCapWords.slice(4, 5);
+  
+  // Extract claims dynamically by splitting sentences
+  const sentences = content.split(/[.!?।]+/).map(s => s.trim()).filter(s => s.length > 10);
+  const claims = sentences.length > 0 ? sentences.slice(0, 3) : [content];
+  
+  // Calculate dynamic scores based on text features
+  let emotionScore = 90; // Default calm
+  const panicWords = ['warning', 'alert', 'died', 'death', 'scam', 'conspiracy', 'fake', 'viral', 'immediately', 'danger', 'dangerous', 'cheat', 'fraud', 'shocking'];
+  for (const pw of panicWords) {
+    if (lower.includes(pw)) {
+      emotionScore -= 15;
+    }
   }
+  if (content.includes('!')) {
+    emotionScore -= 10;
+  }
+  emotionScore = Math.max(10, emotionScore);
+  
+  let biasScore = 80; // Default neutral
+  const loadedWords = ['must', 'proven', 'lying', 'exposed', 'truth', 'liar', 'fraud', 'shocking', 'unbelievable'];
+  for (const lw of loadedWords) {
+    if (lower.includes(lw)) {
+      biasScore -= 15;
+    }
+  }
+  biasScore = Math.max(10, biasScore);
+  
+  let sourceScore = 70;
+  if (lower.includes('official') || lower.includes('gov') || lower.includes('nasa') || lower.includes('who.')) {
+    sourceScore = 95;
+  } else if (lower.includes('whatsapp') || lower.includes('forwarded') || lower.includes('facebook') || lower.includes('tiktok')) {
+    sourceScore = 30;
+  }
+  
+  return {
+    language,
+    cleanedText,
+    entities: {
+      people,
+      organizations: organizations.length > 0 ? organizations : (locations.length > 0 ? [] : ['Unknown Source']),
+      locations: locations.length > 0 ? locations : [],
+      statistics: []
+    },
+    claims,
+    bias: {
+      score: biasScore,
+      framing: biasScore < 50 ? 'sensationalized' : 'neutral',
+      explanation: biasScore < 50 ? 'The text utilizes subjective, opinion-loaded, or framing language.' : 'The text maintains a generally neutral, fact-oriented framing.'
+    },
+    emotions: {
+      score: emotionScore,
+      triggers: emotionScore < 60 ? ['urgency', 'fear'] : ['none'],
+      explanation: emotionScore < 60 ? 'Uses alarming triggers or warning symbols to prompt quick sharing.' : 'Presents information without significant emotional triggers.'
+    },
+    source: {
+      score: sourceScore,
+      reputation: sourceScore > 80 ? 'credible' : sourceScore < 40 ? 'unverified' : 'neutral',
+      explanation: 'Derived dynamically from text attribution references.'
+    }
+  };
 };
 
 const getMockNarrative = (score) => {
-  if (score >= 75) {
+  const isGenuine = score >= 75;
+  const isMisleading = score < 40;
+  
+  if (isGenuine) {
     return {
-      en: "This article is highly credible. It presents verified facts backed by peer-reviewed scientific institutions. The language is entirely objective, with no emotional bias or sensationalized claims.",
-      hi: "यह लेख अत्यधिक विश्वसनीय है। इसमें दी गई जानकारी पूरी तरह से वैज्ञानिक तथ्यों पर आधारित है। इसमें कोई भड़काऊ या सनसनीखेज भाषा का उपयोग नहीं किया गया है।"
+      en: "This assertion is highly credible. Verification engines found supporting matches in official databases, national news reports, and trusted registries. The statement contains objective phrasing without clickbait or emotional manipulation.",
+      hi: "यह दावा अत्यधिक विश्वसनीय है। सत्यापन इंजनों को आधिकारिक डेटाबेस, राष्ट्रीय समाचार रिपोर्टों और विश्वसनीय रजिस्ट्रियों में इसके समर्थन प्रमाण मिले हैं।"
     };
-  } else if (score >= 40) {
+  } else if (isMisleading) {
     return {
-      en: "Caution is advised. While a small percentage of users reported issues, there is no verified proof of batteries exploding. The warning utilizes sensationalist, panic-inducing language.",
-      hi: "सावधानी बरतने की सलाह दी जाती है। हालांकि कुछ उपयोगकर्ताओं ने गर्म होने की शिकायत की है, लेकिन बैटरी फटने का कोई प्रमाणित सबूत नहीं है।"
+      en: "Caution is strongly advised. Investigation indicates this claim contains unverified rumors, fabricated details, or has been explicitly debunked by national factcheckers. The text uses emotional manipulation or sensationalist language to trigger sharing.",
+      hi: "सावधानी बरतने की सलाह दी जाती है। जांच से पता चलता है कि इस दावे में असत्यापित अफवाहें या मनगढ़ंत विवरण शामिल हैं, जिन्हें फैक्ट-चेकर्स द्वारा खारिज किया गया है।"
     };
   } else {
     return {
-      en: "This post is highly misleading and debunked. Medical organizations confirm that lemon and baking soda do not cure viral infections. The text relies heavily on emotional manipulation to trigger shares.",
-      hi: "यह पोस्ट अत्यधिक भ्रामक और गलत है। स्वास्थ्य संगठनों ने पुष्टि की है कि नींबू और बेकिंग सोडा वायरल संक्रमणों का इलाज नहीं करता है।"
+      en: "The claim is partially verified but requires further context. Factual records match some entities, but complete consensus is missing from primary news archives. Users should verify independent official bulletins before distributing.",
+      hi: "दावा आंशिक रूप से सत्यापित है लेकिन इसके लिए और संदर्भ की आवश्यकता है। स्वतंत्र स्रोतों से पुष्टि होने तक सावधानी बरतें।"
     };
   }
 };

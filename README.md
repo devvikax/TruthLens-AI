@@ -67,8 +67,13 @@ Create a `.env` file in the `backend/` directory:
 PORT=5000
 MONGODB_URI=mongodb+srv://...
 JWT_SECRET=your_super_secret_jwt_key
-OPENROUTER_API_KEY=your_openrouter_or_gemini_key
 NODE_ENV=development
+
+# Get a free GEMINI_API_KEY from Google AI Studio (https://aistudio.google.com/) - 100% free with no credit card required
+GEMINI_API_KEY=your_google_gemini_api_key
+
+# Get a FACTCHECK_API_KEY from Google Developer Console to use Google Fact Check Tools (optional)
+FACTCHECK_API_KEY=your_google_factcheck_api_key
 ```
 
 ### 3.3 Installation
