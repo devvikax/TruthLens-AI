@@ -1,6 +1,6 @@
 # Product Requirements Document (PRD)
 
-## VeriLens AI - Multimodal AI Claim Verification & Investigation Lab
+## TruthLens-AI - Multimodal AI Claim Verification & Investigation Lab
 *Tagline: Verify Any Claim. Trust Every Verdict.*
 
 ---
@@ -8,7 +8,7 @@
 ## 1. Executive Summary & Foundations
 
 ### 1.1 Product Vision
-To transform how information is audited in the digital age. **VeriLens AI** is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an AI forensic workspace, it never immediately produces a monolithic verdict. Instead, it systematically investigates content step-by-step—mirroring a human fact-checker—and populates an interactive **Investigation Board** containing claim dossiers, Trust DNA indicators, and source credibility explorers.
+To transform how information is audited in the digital age. **TruthLens-AI** is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an AI forensic workspace, it never immediately produces a monolithic verdict. Instead, it systematically investigates content step-by-step—mirroring a human fact-checker—and populates an interactive **Investigation Board** containing claim dossiers, Trust DNA indicators, and source credibility explorers.
 
 ### 1.2 Mission Statement
 Our mission is to democratize digital forensics by providing a transparent, evidence-based claim verification framework. We replace raw binary verdicts with granular, forensic-style timelines and source cross-examinations, empowering citizens to inspect the exact evidentiary DNA of any media before sharing it.

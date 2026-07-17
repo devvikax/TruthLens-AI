@@ -1,6 +1,6 @@
 # Project Progress Tracking
 
-## VeriLens AI - Multimodal AI Claim Verification & Investigation Lab
+## TruthLens-AI - Multimodal AI Claim Verification & Investigation Lab
 *Tagline: Verify Any Claim. Trust Every Verdict.*
 
 ---
@@ -35,6 +35,7 @@
 | **M12: Final QA & Documentation**| 2026-08-17 | Generated TEST_REPORT.md, BUG_REPORT.md, and CHANGELOG.md. | **COMPLETED** |
 | **M13: Semantic Retrieval Redesign**| 2026-08-20 | Deployed Claim Understander, Entity Linker, and Bidirectional Relevance Scorers. | **COMPLETED** |
 | **M14: Claim Strategy Integration** | 2026-08-23 | Deployed Intelligent Claim Classification & Verification Strategy Selector. | **COMPLETED** |
+| **M15: Neo-Brutalist Visual Overhaul** | 2026-08-25 | Redesigned the entire UI to Neo-Brutalist theme and added animated dotted canvas. | **COMPLETED** |
 
 ---
 
@@ -53,3 +54,12 @@
 - [x] Update frontend Results UI (`Results.jsx`) to render category, strategy used, sources prioritized, and 5-stage confidence indicators.
 - [x] Run comprehensive verification sweeps for the 10 test categories and verify that strategies shift correctly.
 - [x] Update project specifications files (`PRD.md`, `ARCHITECTURE.md`, `PROGRESS.md`).
+
+### Phase 17: Neo-Brutalist Visual Overhaul & Dotted Canvas Animation (100% Completed)
+- [x] Load `Space Grotesk` (headings) and `Space Mono` (monospace logs and code blocks) font declarations in CSS.
+- [x] Redefine global styling variables for high-contrast Neo-Brutalist palette (Stark Yellow, Cyan, Pink, Dark Slate, Cream).
+- [x] Rewrite `global.css` utilities to apply thick `3px solid #000000` borders and zero-blur hard offsets (`box-shadow: 4px 4px 0px #000000`).
+- [x] Add click motion translations (translate `-2px, -2px` with a `6px` shadow on hover; `2px, 2px` with `2px` shadow on active press) to interactive elements.
+- [x] Rebuild the analysis progress loader screen to feature a digital forensic scanning hologram target with live timestamped monospace logs.
+- [x] Create a custom high-performance canvas background in `Home.jsx` rendering drifting, theme-synced particle dots connected by dynamic mesh lines.
+- [x] Verify successful compilation with production build script.

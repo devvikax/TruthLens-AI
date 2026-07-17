@@ -1,6 +1,6 @@
-# VeriLens AI - Hackathon Demo Script
+# TruthLens-AI - Hackathon Demo Script
 
-This document details the pitch and demonstration flows for presenting **VeriLens AI** to judges, developers, and users.
+This document details the pitch and demonstration flows for presenting **TruthLens-AI** to judges, developers, and users.
 
 ---
 
@@ -8,7 +8,7 @@ This document details the pitch and demonstration flows for presenting **VeriLen
 
 > "Every day, millions of pieces of unverified media are shared across WhatsApp, X, and Instagram. Traditional fact-checkers tell you a binary verdict: 'Fake' or 'True'. This direct assertion triggers defensiveness and bias.
 >
-> **VeriLens AI** changes this. Styled as an interactive **AI Courtroom**, it never just spits out a verdict. Instead, it normalizes any text, screenshot, PDF, or video link, and takes you step-by-step through a transparent forensic investigation. You see the Prosecution's arguments, the Defense's corroborations, the mathematical confidence score, and the exact process timeline. VeriLens AI doesn't tell you what to think; it teaches you how to investigate."
+> **TruthLens-AI** changes this. Styled as an interactive **AI Courtroom**, it never just spits out a verdict. Instead, it normalizes any text, screenshot, PDF, or video link, and takes you step-by-step through a transparent forensic investigation. You see the Prosecution's arguments, the Defense's corroborations, the mathematical confidence score, and the exact process timeline. TruthLens-AI doesn't tell you what to think; it teaches you how to investigate."
 
 ---
 
@@ -20,7 +20,7 @@ This document details the pitch and demonstration flows for presenting **VeriLen
 3.  **Click 'Lemon Juice Cure' (WhatsApp forward)**:
     *   This switches to the **Text tab** and populates the text field.
     *   Explain: "We are testing a viral health myth."
-4.  **Click 'Verify with VeriLens AI'**:
+4.  **Click 'Verify with TruthLens-AI'**:
     *   The screen changes to the **Live Auditing journey**.
     *   Walk the judges through the progress stepper steps: `Ingesting Input` → `Decomposing Assertions` → `Querying Adapters` → `Weighting Trust Scores` → `Final Verdict Resolved`.
 

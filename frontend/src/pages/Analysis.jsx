@@ -218,8 +218,8 @@ export default function Analysis() {
               </h2>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', maxWidth: '480px', margin: '0 auto' }}>
                 {language === 'en' 
-                  ? 'VeriLens intelligence adapters are scraping registries, checking metadata, and indexing wire consensus patterns.' 
-                  : 'वेरीलेंस इंटेलिजेंस एडेप्टर रजिस्ट्रियों को स्क्रैप कर रहे हैं, मेटाडेटा की जांच कर रहे हैं, और वायर सर्वसम्मति पैटर्न को अनुक्रमित कर रहे हैं।'}
+                  ? 'TruthLens-AI intelligence adapters are scraping registries, checking metadata, and indexing wire consensus patterns.' 
+                  : 'ट्रुथलेंस-एआई इंटेलिजेंस एडेप्टर रजिस्ट्रियों को स्क्रैप कर रहे हैं, मेटाडेटा की जांच कर रहे हैं, और वायर सर्वसम्मति पैटर्न को अनुक्रमित कर रहे हैं।'}
               </p>
             </div>
 
@@ -323,7 +323,7 @@ export default function Analysis() {
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Compass size={20} color="var(--color-primary)" />
                 <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 700 }}>
-                  {language === 'en' ? 'VeriLens AI Curated Demo Sandbox' : 'वेरीलेंस एआई डेमो सैंडबॉक्स'}
+                  {language === 'en' ? 'TruthLens-AI Curated Demo Sandbox' : 'ट्रुथलेंस-एआई डेमो सैंडबॉक्स'}
                 </strong>
               </div>
               <button 
@@ -338,7 +338,7 @@ export default function Analysis() {
 
             <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
               {language === 'en'
-                ? 'Quick-test VeriLens AI using curated sample credentials. Click on any card below to populate the workspace:'
+                ? 'Quick-test TruthLens-AI using curated sample credentials. Click on any card below to populate the workspace:'
                 : 'विभिन्न क्रेडिबिलिटी पतों से मेल खाने वाले परीक्षण मामलों का त्वरित परीक्षण करें:'}
             </p>
 
@@ -589,7 +589,7 @@ export default function Analysis() {
           >
             <Play size={18} fill="currentColor" />
             <span>
-              {language === 'en' ? 'Verify with VeriLens AI' : 'वेरीलेंस एआई के साथ सत्यापित करें'}
+              {language === 'en' ? 'Verify with TruthLens-AI' : 'ट्रुथलेंस-एआई के साथ सत्यापित करें'}
             </span>
           </button>
         </div>

@@ -121,11 +121,11 @@ export default function Results() {
   };
 
   const copyShareSummary = () => {
-    const summaryText = `🔍 [VeriLens AI Courtroom Report]
+    const summaryText = `🔍 [TruthLens-AI Courtroom Report]
 Title: "${title}"
 Verdict: ${currentAnalysis.verdict || simpleVerdict} (Confidence: ${confidenceDetails?.score || 85}%)
 Persona Explanation [${persona.toUpperCase()}]: ${language === 'en' ? explanationText?.en : explanationText?.hi}
-Think Before You Share. Ground truth verified at VeriLens AI.`;
+Think Before You Share. Ground truth verified at TruthLens-AI.`;
 
     navigator.clipboard.writeText(summaryText);
     showToast(

@@ -1,4 +1,4 @@
-# Bug Tracking & Resolution Log - VeriLens AI
+# Bug Tracking & Resolution Log - TruthLens-AI
 
 This document logs all bugs detected and resolved during the Quality Assurance and Production Hardening passes.
 

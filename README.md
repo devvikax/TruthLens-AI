@@ -1,8 +1,8 @@
-# VeriLens AI
+# TruthLens-AI
 
 > **Verify Any Claim. Trust Every Verdict.**
 
-VeriLens AI is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an interactive digital courtroom, it rejects monolithic "fake vs real" binary verdicts. Instead, it guides the user step-by-step through a transparent forensic investigation journey, exposing claim dossiers, dynamic Source Trust ratings, and the underlying mathematical confidence scores.
+TruthLens-AI is a professional-grade **Multimodal AI Claim Verification & Investigation Lab**. Styled as an interactive digital courtroom, it rejects monolithic "fake vs real" binary verdicts. Instead, it guides the user step-by-step through a transparent forensic investigation journey, exposing claim dossiers, dynamic Source Trust ratings, and the underlying mathematical confidence scores.
 
 ---
 

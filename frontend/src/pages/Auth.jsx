@@ -68,7 +68,7 @@ export default function Auth() {
           <ShieldCheck size={36} color="var(--color-primary)" style={{ margin: '0 auto var(--space-xs) auto' }} />
           <h2 style={{ fontSize: '1.5rem' }}>
             {isLogin 
-              ? (language === 'en' ? 'Sign In to VeriLens' : 'वेरीलेंस में साइन इन करें')
+              ? (language === 'en' ? 'Sign In to TruthLens-AI' : 'ट्रुथलेंस-एआई में साइन इन करें')
               : (language === 'en' ? 'Create Free Account' : 'मुफ़्त खाता बनाएं')}
           </h2>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', marginTop: '4px' }}>

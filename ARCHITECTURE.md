@@ -1,13 +1,13 @@
 # System Architecture Document
 
-## VeriLens AI - Multimodal AI Claim Verification & Investigation Lab
+## TruthLens-AI - Multimodal AI Claim Verification & Investigation Lab
 *Tagline: Verify Any Claim. Trust Every Verdict.*
 
 ---
 
 ## 1. High-Level Architecture Overview
 
-VeriLens AI operates as a decoupled MERN platform upgraded to support a **Unified Multimodal Claim Verification Pipeline**. The system ingests Text, URLs, Screenshots, PDFs, and Video (YouTube, Reels, X, MP4) feeds, normalizes them into structured text, decomposes the text into claims, verifies each claim independently, and returns granular timeline records and interactive evidence graphs.
+TruthLens-AI operates as a decoupled MERN platform upgraded to support a **Unified Multimodal Claim Verification Pipeline**. The system ingests Text, URLs, Screenshots, PDFs, and Video (YouTube, Reels, X, MP4) feeds, normalizes them into structured text, decomposes the text into claims, verifies each claim independently, and returns granular timeline records and interactive evidence graphs.
 
 ```mermaid
 graph TD

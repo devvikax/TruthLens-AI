@@ -1,6 +1,6 @@
-# Quality Assurance Test Report - VeriLens AI
+# Quality Assurance Test Report - TruthLens-AI
 
-This document outlines the final verification logs, test parameters, and failure-tolerant recovery checks executed for **VeriLens AI**.
+This document outlines the final verification logs, test parameters, and failure-tolerant recovery checks executed for **TruthLens-AI**.
 
 ---
 

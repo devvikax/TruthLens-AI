@@ -18,10 +18,10 @@ export default function About() {
       aHi: "हमारा ट्रस्ट स्कोर स्रोत की प्रतिष्ठा (विश्वसनीयता सूची के खिलाफ लिंक की जांच), भावना निष्पक्षता (भावनात्मक भाषा की पहचान), और सत्यापित वैश्विक तथ्य-जांच रजिस्ट्रियों में सीधे मिलान का एक भारित संयोजन है।"
     },
     {
-      qEn: "Does VeriLens AI block or delete fake news?",
-      qHi: "क्या वेरीलेंस एआई फर्जी खबरों को ब्लॉक या डिलीट करता है?",
-      aEn: "No. VeriLens AI does not delete, block, or censor any content. We believe in media literacy. We explain WHY content might be biased or unverified and provide official references so you can make your own informed decision.",
-      aHi: "नहीं। वेरीलेंस एआई किसी भी सामग्री को हटाता, ब्लॉक या सेंसर नहीं करता है। हम मीडिया साक्षरता में विश्वास करते हैं। हम समझाते हैं कि सामग्री क्यों पक्षपाती या असत्यापित हो सकती है और आधिकारिक संदर्भ प्रदान करते हैं ताकि आप स्वयं सोच-समझकर निर्णय ले सकें।"
+      qEn: "Does TruthLens-AI block or delete fake news?",
+      qHi: "क्या ट्रुथलेंस-एआई फर्जी खबरों को ब्लॉक या डिलीट करता है?",
+      aEn: "No. TruthLens-AI does not delete, block, or censor any content. We believe in media literacy. We explain WHY content might be biased or unverified and provide official references so you can make your own informed decision.",
+      aHi: "नहीं। ट्रुथलेंस-एआई किसी भी सामग्री को हटाता, ब्लॉक या सेंसर नहीं करता है। हम मीडिया साक्षरता में विश्वास करते हैं। हम समझाते हैं कि सामग्री क्यों पक्षपाती या असत्यापित हो सकती है और आधिकारिक संदर्भ प्रदान करते हैं ताकि आप स्वयं सोच-समझकर निर्णय ले सकें।"
     },
     {
       qEn: "Is my pasted content saved?",
@@ -41,8 +41,8 @@ export default function About() {
         </h1>
         <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: '1.6' }}>
           {language === 'en'
-            ? 'VeriLens AI was built to encourage responsible media consumption. We bridge the gap between complex fact-checking databases and everyday social sharing.'
-            : 'वेरीलेंस एआई का निर्माण जिम्मेदार मीडिया उपभोग को बढ़ावा देने के लिए किया गया था। हम जटिल तथ्य-जांच डेटाबेस और रोज़मर्रा की सोशल शेयरिंग के बीच की खाई को पाटने का काम करते हैं।'}
+            ? 'TruthLens-AI was built to encourage responsible media consumption. We bridge the gap between complex fact-checking databases and everyday social sharing.'
+            : 'ट्रुथलेंस-एआई का निर्माण जिम्मेदार मीडिया उपभोग को बढ़ावा देने के लिए किया गया था। हम जटिल तथ्य-जांच डेटाबेस और रोज़मर्रा की सोशल शेयरिंग के बीच की खाई को पाटने का काम करते हैं।'}
         </p>
       </section>
 

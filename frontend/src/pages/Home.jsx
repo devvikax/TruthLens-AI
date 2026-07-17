@@ -1,10 +1,103 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldAlert, BookOpen, Search, ArrowRight, ShieldCheck, Share2, Eye, Compass } from 'lucide-react';
 import { useAnalysisStore } from '../store/analysisStore';
 
 export default function Home() {
   const { language } = useAnalysisStore();
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    let animationFrameId;
+
+    const resize = () => {
+      if (!canvas.parentElement) return;
+      canvas.width = canvas.parentElement.scrollWidth || window.innerWidth;
+      canvas.height = canvas.parentElement.scrollHeight || document.documentElement.scrollHeight;
+    };
+
+    resize();
+    window.addEventListener('resize', resize);
+    // Extra safety update after a short delay to account for layouts settling
+    const timer = setTimeout(resize, 300);
+
+    // Dotted particle field
+    const dotsCount = 75;
+    const dots = [];
+    const colors = ['#facc15', '#22d3ee', '#f472b6']; // Theme Stark Yellow, Cyan, Pink
+
+    for (let i = 0; i < dotsCount; i++) {
+      dots.push({
+        x: Math.random() * window.innerWidth,
+        y: Math.random() * window.innerHeight,
+        vx: (Math.random() - 0.5) * 0.45,
+        vy: (Math.random() - 0.5) * 0.45,
+        radius: Math.random() * 2 + 1.2,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+
+    const draw = () => {
+      const w = canvas.width;
+      const h = canvas.height;
+
+      // Clear canvas
+      ctx.clearRect(0, 0, w, h);
+
+      // Check current theme
+      const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+      const lineColor = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)';
+
+      // Draw faint connections between nearby dots
+      ctx.strokeStyle = lineColor;
+      ctx.lineWidth = 0.75;
+      for (let i = 0; i < dotsCount; i++) {
+        for (let j = i + 1; j < dotsCount; j++) {
+          const dx = dots[i].x - dots[j].x;
+          const dy = dots[i].y - dots[j].y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 110) {
+            ctx.beginPath();
+            ctx.moveTo(dots[i].x, dots[i].y);
+            ctx.lineTo(dots[j].x, dots[j].y);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Draw drifting dots
+      dots.forEach(dot => {
+        ctx.beginPath();
+        ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
+        ctx.fillStyle = dot.color;
+        ctx.fill();
+
+        // Update positions
+        dot.x += dot.vx;
+        dot.y += dot.vy;
+
+        // Wrap around borders smoothly
+        if (dot.x < -10) dot.x = w + 10;
+        if (dot.x > w + 10) dot.x = -10;
+        if (dot.y < -10) dot.y = h + 10;
+        if (dot.y > h + 10) dot.y = -10;
+      });
+
+      animationFrameId = requestAnimationFrame(draw);
+    };
+
+    draw();
+
+    return () => {
+      window.removeEventListener('resize', resize);
+      clearTimeout(timer);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   const supportedTypes = [
     { icon: <Compass size={24} />, titleEn: "News Articles", titleHi: "समाचार लेख", descEn: "Paste plain text of any news article to inspect language framing.", descHi: "भाषा के स्वरूप की जांच करने के लिए किसी भी समाचार लेख का पाठ पेस्ट करें।" },
@@ -14,8 +107,11 @@ export default function Home() {
   ];
 
   return (
-    <div className="animate-fade" style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', padding: 'var(--space-2xl) 0' }}>
+    <div className="animate-fade" style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)', padding: 'var(--space-2xl) 0', overflow: 'hidden' }}>
+      <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 0 }} />
       
+      <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 'var(--space-2xl)' }}>
+
       {/* Hero Section */}
       <section style={{ textAlign: 'center', maxWidth: '800px', margin: '0 auto', padding: 'var(--space-lg) 0' }}>
         <div style={{
@@ -62,8 +158,8 @@ export default function Home() {
           marginRight: 'auto'
         }}>
           {language === 'en' 
-            ? 'VeriLens AI analyzes news articles, URLs, screenshots, and PDFs. We explain WHY a claim might be misleading, encouraging critical thinking over censorship.'
-            : 'वेरीलेंस एआई समाचार लेखों, यूआरएल, स्क्रीनशॉट और पीडीएफ का विश्लेषण करता है। हम समझाते हैं कि कोई दावा क्यों भ्रामक हो सकता है, जिससे सेंसरशिप के बजाय आलोचनात्मक सोच को बढ़ावा मिलता है।'}
+            ? 'TruthLens-AI analyzes news articles, URLs, screenshots, and PDFs. We explain WHY a claim might be misleading, encouraging critical thinking over censorship.'
+            : 'ट्रुथलेंस-एआई समाचार लेखों, यूआरएल, स्क्रीनशॉट और पीडीएफ का विश्लेषण करता है। हम समझाते हैं कि कोई दावा क्यों भ्रामक हो सकता है, जिससे सेंसरशिप के बजाय आलोचनात्मक सोच को बढ़ावा मिलता है।'}
         </p>
         
         <div style={{ display: 'flex', gap: 'var(--space-md)', justifyContent: 'center' }}>
@@ -209,7 +305,7 @@ export default function Home() {
         }}>
           <div>
             <h2 style={{ fontSize: '1.75rem', marginBottom: 'var(--space-md)' }}>
-              {language === 'en' ? 'Why Trust VeriLens AI?' : 'वेरीलेंस एआई पर क्यों भरोसा करें?'}
+              {language === 'en' ? 'Why Trust TruthLens-AI?' : 'ट्रुथलेंस-एआई पर क्यों भरोसा करें?'}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-md)' }}>
               <div style={{ display: 'flex', gap: 'var(--space-md)' }}>
@@ -267,6 +363,7 @@ export default function Home() {
         </div>
       </section>
 
+    </div>
     </div>
   );
 }
