@@ -33,16 +33,16 @@ export default function TrustGauge({ score = 0, size = 180, strokeWidth = 14 }) 
 
   // Determine colors based on score
   let strokeColor = 'var(--color-success)';
-  let verdictTextEn = 'Credible';
-  let verdictTextHi = 'विश्वसनीय';
+  let verdictTextEn = 'REAL';
+  let verdictTextHi = 'सत्य';
 
   if (score < 40) {
     strokeColor = 'var(--color-danger)';
-    verdictTextEn = 'Misleading';
-    verdictTextHi = 'भ्रामक';
+    verdictTextEn = 'FAKE';
+    verdictTextHi = 'फ़ेक';
   } else if (score < 75) {
     strokeColor = 'var(--color-warning)';
-    verdictTextEn = 'Caution';
+    verdictTextEn = 'CAUTION';
     verdictTextHi = 'सावधान';
   }
 
@@ -114,24 +114,17 @@ export default function TrustGauge({ score = 0, size = 180, strokeWidth = 14 }) 
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        textAlign: 'center'
+        textAlign: 'center',
+        padding: '0 var(--space-xs)'
       }}>
         <span style={{
-          fontSize: '2.5rem',
+          fontSize: score < 75 && score >= 40 ? '1.5rem' : '2.2rem',
           fontFamily: 'var(--font-display)',
           fontWeight: 800,
           color: strokeColor,
-          lineHeight: '1'
-        }}>
-          {animatedScore}%
-        </span>
-        <span style={{
-          fontSize: '0.85rem',
+          lineHeight: '1.1',
           textTransform: 'uppercase',
-          fontWeight: 700,
-          color: 'var(--text-secondary)',
-          marginTop: '4px',
-          letterSpacing: '0.05em'
+          letterSpacing: '0.02em'
         }}>
           {language === 'en' ? verdictTextEn : verdictTextHi}
         </span>
