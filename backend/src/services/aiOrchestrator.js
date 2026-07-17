@@ -16,7 +16,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const executeOpenRouter = async (prompt, isJson, timeoutLimit) => {
   const messages = [{ role: 'user', content: prompt }];
   const apiKey = process.env.OPENROUTER_API_KEY;
-  const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
+  const model = process.env.OPENROUTER_MODEL || 'meta-llama/llama-3-8b-instruct:free';
 
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
