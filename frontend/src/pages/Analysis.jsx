@@ -299,44 +299,45 @@ export default function Analysis() {
         </div>
       ) : (
         /* Submission Forms Page */
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-lg)' }}>
-          <div style={{ textAlign: 'center', marginBottom: 'var(--space-md)' }}>
-            <h1 style={{ fontSize: '2.2rem', marginBottom: 'var(--space-xs)', fontWeight: 800 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-xl)' }}>
+          <div style={{ textAlign: 'center', marginBottom: 'var(--space-sm)' }}>
+            <h1 style={{ fontSize: '2.4rem', marginBottom: 'var(--space-xs)', fontWeight: 800, textTransform: 'uppercase', textShadow: '3px 3px 0px #000000' }}>
               {language === 'en' ? 'Start Content Inspection' : 'सामग्री निरीक्षण शुरू करें'}
             </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem' }}>
+            <p style={{ color: 'var(--text-secondary)', fontSize: '0.98rem', fontWeight: 500 }}>
               {language === 'en' ? 'Submit raw text, website URLs, documents, or video feeds to investigate credentials.' : 'क्रेडेंशियल्स की जांच करने के लिए टेक्स्ट, वेब पते या दस्तावेज़ कैप्चर सबमिट करें।'}
             </p>
           </div>
 
           {/* Curated Demo Mode Panel (resettable sandbox) */}
           <div className="glass-card" style={{
-            border: '1.5px solid var(--color-primary)',
-            backgroundColor: 'rgba(0, 102, 255, 0.02)',
+            border: '3px solid #000000',
+            backgroundColor: 'var(--bg-secondary)',
+            boxShadow: '6px 6px 0px #000000',
             padding: 'var(--space-lg)',
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-md)',
-            borderRadius: 'var(--radius-xl)'
+            borderRadius: 'var(--radius-md)'
           }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Compass size={20} color="var(--color-primary)" />
-                <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 700 }}>
+                <Compass size={20} color="var(--color-primary)" style={{ filter: 'drop-shadow(1.5px 1.5px 0px #000000)' }} />
+                <strong style={{ fontSize: '1.05rem', color: 'var(--text-primary)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   {language === 'en' ? 'TruthLens-AI Curated Demo Sandbox' : 'ट्रुथलेंस-एआई डेमो सैंडबॉक्स'}
                 </strong>
               </div>
               <button 
                 onClick={resetForm}
                 className="btn btn-secondary" 
-                style={{ padding: '4px 10px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+                style={{ padding: '6px 12px', fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: 'var(--color-info)' }}
               >
                 <RefreshCw size={12} />
                 <span>{language === 'en' ? 'Reset Sandbox' : 'रीसेट सैंडबॉक्स'}</span>
               </button>
             </div>
 
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: 0 }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', fontWeight: 500, margin: 0 }}>
               {language === 'en'
                 ? 'Quick-test TruthLens-AI using curated sample credentials. Click on any card below to populate the workspace:'
                 : 'विभिन्न क्रेडिबिलिटी पतों से मेल खाने वाले परीक्षण मामलों का त्वरित परीक्षण करें:'}
@@ -345,7 +346,7 @@ export default function Analysis() {
             <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))',
-              gap: '10px'
+              gap: '12px'
             }}>
               {/* Verified True */}
               <div 
@@ -354,14 +355,31 @@ export default function Analysis() {
                   setTextInput("NASA confirms James Webb space telescope discovers atmospheric water vapor on rocky exoplanet.");
                   showToast(language === 'en' ? 'Loaded: Verified True text claim.' : 'सत्यापित सही दावा लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--color-success)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-success) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Text Claim</span>
-                  <span style={{ color: 'var(--color-success)', fontWeight: 600 }}>Verified True</span>
+                  <span style={{ color: 'var(--color-success)' }}>Verified True</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>James Webb Discovery</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>James Webb Discovery</p>
               </div>
 
               {/* Verified False */}
@@ -371,14 +389,31 @@ export default function Analysis() {
                   setTextInput("Drinking lemon juice with baking soda in hot water completely cures and prevents all viral infections.");
                   showToast(language === 'en' ? 'Loaded: Verified False text claim.' : 'सत्यापित गलत दावा लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--color-danger)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-danger) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Text Claim</span>
-                  <span style={{ color: 'var(--color-danger)', fontWeight: 600 }}>Verified False</span>
+                  <span style={{ color: 'var(--color-danger)' }}>Verified False</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>Lemon Juice Cure Claim</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>Lemon Juice Cure Claim</p>
               </div>
 
               {/* Misleading */}
@@ -388,14 +423,31 @@ export default function Analysis() {
                   setTextInput("Apple iOS 18 completely destroys iPhone batteries; users report 50% battery drop in 10 minutes.");
                   showToast(language === 'en' ? 'Loaded: Misleading text claim.' : 'भ्रामक दावा लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--color-warning)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-warning) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Text Claim</span>
-                  <span style={{ color: 'var(--color-warning)', fontWeight: 600 }}>Misleading</span>
+                  <span style={{ color: 'var(--color-warning)' }}>Misleading</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>OS Battery Drainage Rumor</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>OS Battery Drainage Rumor</p>
               </div>
 
               {/* Breaking News */}
@@ -405,14 +457,31 @@ export default function Analysis() {
                   setTextInput("Earthquake of magnitude 6.5 hits region; official rescue teams dispatched. Severe damages reported.");
                   showToast(language === 'en' ? 'Loaded: Breaking News text claim.' : 'ताजा समाचार लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--color-primary)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-info) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Text Claim</span>
-                  <span style={{ color: 'var(--color-primary)', fontWeight: 600 }}>Breaking News</span>
+                  <span style={{ color: 'var(--color-info)' }}>Breaking News</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>Natural Disaster Report</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>Natural Disaster Report</p>
               </div>
 
               {/* YouTube Video URL */}
@@ -422,14 +491,31 @@ export default function Analysis() {
                   setUrlInput("https://youtube.com/shorts/eKz9iHbN_T8?si=v5iH6wSCMn5pji3K");
                   showToast(language === 'en' ? 'Loaded: YouTube video link.' : 'यूट्यूब वीडियो लिंक लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid #ff0000', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid #ff0000 !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Video Link</span>
-                  <span style={{ color: '#ff0000', fontWeight: 600 }}>YouTube URL</span>
+                  <span style={{ color: '#ff0000' }}>YouTube URL</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>Healthy Snack Tutorial</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>Healthy Snack Tutorial</p>
               </div>
 
               {/* Social Media Link */}
@@ -439,14 +525,31 @@ export default function Analysis() {
                   setUrlInput("https://x.com/isro/status/1694318712345678901");
                   showToast(language === 'en' ? 'Loaded: X social media post.' : 'एक्स सोशल मीडिया पोस्ट लोड किया गया।', 'success');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid #1da1f2', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid #000000 !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Social Media</span>
-                  <span style={{ color: '#1da1f2', fontWeight: 600 }}>X (Twitter) URL</span>
+                  <span style={{ color: 'var(--text-primary)' }}>X (Twitter) URL</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>Official ISRO Moon Update</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>Official ISRO Moon Update</p>
               </div>
 
               {/* PDF Document */}
@@ -455,14 +558,31 @@ export default function Analysis() {
                   setActiveTab('pdf');
                   loadExample('credible', 'pdf');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--border-focus)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-primary) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>PDF Document</span>
-                  <span style={{ color: 'var(--border-focus)', fontWeight: 600 }}>PDF Attachment</span>
+                  <span style={{ color: 'var(--color-primary)' }}>PDF Attachment</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>NASA Science Review</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>NASA Science Review</p>
               </div>
 
               {/* Image Screenshot */}
@@ -471,60 +591,84 @@ export default function Analysis() {
                   setActiveTab('image');
                   loadExample('caution', 'image');
                 }}
-                className="glass"
-                style={{ padding: '10px 12px', borderLeft: '4px solid var(--text-muted)', cursor: 'pointer', borderRadius: 'var(--radius-md)', transition: 'transform 0.2s' }}
+                className="glass-card"
+                style={{ 
+                  padding: '12px 14px', 
+                  border: '3px solid #000000',
+                  borderLeft: '8px solid var(--color-danger) !important', 
+                  cursor: 'pointer', 
+                  borderRadius: 'var(--radius-xs)', 
+                  backgroundColor: 'var(--bg-tertiary)',
+                  boxShadow: '3px 3px 0px #000000 !important',
+                  transition: 'transform 0.15s ease, box-shadow 0.15s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                  e.currentTarget.style.boxShadow = '5px 5px 0px #000000 !important';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'none';
+                  e.currentTarget.style.boxShadow = '3px 3px 0px #000000 !important';
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   <span>Image Screenshot</span>
-                  <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>PNG Capture</span>
+                  <span style={{ color: 'var(--color-danger)' }}>PNG Capture</span>
                 </div>
-                <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', fontWeight: 600 }}>OS Software Rumor</p>
+                <p style={{ margin: '6px 0 0 0', fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase' }}>OS Software Rumor</p>
               </div>
             </div>
           </div>
 
-          {/* Premium Segmented Control Tabs */}
+          {/* Premium Segmented Control Tabs - Brutalist Multi-Segment Border Control */}
           <div style={{
             display: 'flex',
-            backgroundColor: 'var(--bg-tertiary)',
-            borderRadius: 'var(--radius-xl)',
-            padding: '6px',
-            gap: '6px',
-            border: '1px solid var(--border-color)',
-            boxShadow: 'var(--shadow-sm)',
-            overflowX: 'auto'
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-xs)',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px #000000',
+            overflow: 'hidden'
           }}>
-            {tabs.map((tab) => {
+            {tabs.map((tab, idx) => {
               const isActive = activeTab === tab.id;
               return (
                 <button
                   key={tab.id}
                   onClick={() => { setActiveTab(tab.id); setUploadedFile(null); }}
-                  className="btn"
                   style={{
-                    backgroundColor: isActive ? 'var(--bg-secondary)' : 'transparent',
-                    color: isActive ? 'var(--color-primary)' : 'var(--text-secondary)',
-                    borderRadius: 'var(--radius-lg)',
-                    boxShadow: isActive ? 'var(--shadow-md), 0 0 10px rgba(0, 102, 255, 0.08)' : 'none',
-                    fontWeight: isActive ? 600 : 500,
-                    padding: '0.65rem 1rem',
-                    flex: '1 0 auto',
+                    backgroundColor: isActive ? 'var(--color-primary)' : 'var(--bg-tertiary)',
+                    color: '#000000',
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: '0.9rem 1.1rem',
+                    flex: 1,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    transition: 'all var(--transition-fast)'
+                    cursor: 'pointer',
+                    border: 'none',
+                    borderRight: idx === tabs.length - 1 ? 'none' : '3px solid #000000',
+                    transition: 'background-color var(--transition-fast)'
                   }}
                 >
                   {tab.icon}
-                  <span>{language === 'en' ? tab.labelEn : tab.labelHi}</span>
+                  <span style={{ fontSize: '0.82rem' }}>{language === 'en' ? tab.labelEn : tab.labelHi}</span>
                 </button>
               );
             })}
           </div>
 
-          {/* Tab Panel Context */}
-          <div className="glass-card" style={{ padding: 'var(--space-xl)', minHeight: '260px' }}>
+          {/* Tab Panel Context - Brutalist Container */}
+          <div className="glass-card" style={{
+            padding: 'var(--space-xl)',
+            minHeight: '260px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '3px solid #000000',
+            boxShadow: '6px 6px 0px #000000',
+            borderRadius: 'var(--radius-md)'
+          }}>
             
             {activeTab === 'text' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
@@ -534,10 +678,10 @@ export default function Analysis() {
                   value={textInput}
                   onChange={(e) => setTextInput(e.target.value)}
                   maxLength={10000}
-                  style={{ minHeight: '180px', resize: 'vertical' }}
+                  style={{ minHeight: '180px', resize: 'vertical', border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
                   aria-label="Raw Text Submission Input"
                 />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
                   <span>{language === 'en' ? 'Supports English & Hindi' : 'अंग्रेजी और हिंदी का समर्थन करता है'}</span>
                   <span>{textInput.length} / 10000 {language === 'en' ? 'chars' : 'अक्षर'}</span>
                 </div>
@@ -546,7 +690,7 @@ export default function Analysis() {
 
             {activeTab === 'url' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                <label style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', letterSpacing: '0.02em' }}>
                   {language === 'en' ? 'Article URL / Link' : 'लेख यूआरएल / लिंक'}
                 </label>
                 <input
@@ -555,9 +699,10 @@ export default function Analysis() {
                   placeholder="https://example.com/news-story"
                   value={urlInput}
                   onChange={(e) => setUrlInput(e.target.value)}
+                  style={{ border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
                   aria-label="Website Link Submission Input"
                 />
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
                   {language === 'en' ? 'E.g., news portals, research pages, blog posts, YouTube/Reels video links.' : 'उदा. समाचार पोर्टल, शोध पृष्ठ, ब्लॉग पोस्ट, यूट्यूब/रील्स वीडियो लिंक।'}
                 </span>
               </div>
@@ -581,15 +726,25 @@ export default function Analysis() {
 
           </div>
 
-          {/* Action Trigger */}
+          {/* Action Trigger - Massive Brutalist Launch Button */}
           <button
             onClick={() => handleStartAnalysis()}
             className="btn btn-primary btn-large"
-            style={{ width: '100%', marginTop: 'var(--space-md)' }}
+            style={{
+              width: '100%',
+              marginTop: 'var(--space-md)',
+              padding: '1.25rem',
+              fontSize: '1.1rem',
+              backgroundColor: 'var(--color-primary)',
+              color: '#000000',
+              border: '3px solid #000000',
+              boxShadow: '6px 6px 0px #000000',
+              transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)'
+            }}
           >
-            <Play size={18} fill="currentColor" />
-            <span>
-              {language === 'en' ? 'Verify with TruthLens-AI' : 'ट्रुथलेंस-एआई के साथ सत्यापित करें'}
+            <Play size={20} fill="currentColor" />
+            <span style={{ fontWeight: 900, letterSpacing: '0.06em' }}>
+              {language === 'en' ? 'LAUNCH FORENSIC AUDIT' : 'फॉरेंसिक ऑडिट शुरू करें'}
             </span>
           </button>
         </div>

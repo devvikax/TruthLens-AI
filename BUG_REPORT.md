@@ -34,9 +34,9 @@ This document logs all bugs detected and resolved during the Quality Assurance a
     2. Wrapped all creations in `try-catch` blocks that handle duplicate key codes (`11000`) and fallback to retrieval, ensuring thread safety.
 
 ### Bug 5: Old Branding in Navigation & Footers (Severity: Minor)
-*   **Symptom**: The application displayed "TruthLens AI" in the headers, footers, FAQs, and chat instructions instead of "VeriLens AI".
+*   **Symptom**: The application displayed old branding names in the headers, footers, FAQs, and chat instructions instead of "TruthLens-AI".
 *   **Root Cause**: Hardcoded strings remained from the early project phases.
-*   **Resolution**: Replaced all occurrences of "TruthLens" with **VeriLens AI** in the navbar, footer, and page components.
+*   **Resolution**: Replaced all occurrences of old brands with **TruthLens-AI** in the navbar, footer, and page components.
 
 ### Bug 6: Incorrect Source Prioritization (Severity: Major)
 *   **Symptom**: Medical and space discovery claims were evaluated using default, general news-heavy trust weights, allowing blog posts to skew final consensus scores.

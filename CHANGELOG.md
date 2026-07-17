@@ -1,6 +1,6 @@
-# Changelog - VeriLens AI
+# Changelog - TruthLens-AI
 
-All notable changes to the **VeriLens AI** project during the hardening and explainability phases are documented here.
+All notable changes to the **TruthLens-AI** project during the hardening and explainability phases are documented here.
 
 ---
 
@@ -33,5 +33,5 @@ All notable changes to the **VeriLens AI** project during the hardening and expl
 *   Fixed MongoDB `E11000` duplicate key index collisions on seeded and dynamic domain creations in `sourceRegistryService.js`.
 *   Fixed a React runtime ReferenceError where the `<Compass>` icon was used in `Analysis.jsx` but not imported from `lucide-react`, which had left the input pages blank.
 *   Fixed a bug where credit-exhausted API keys fell back to positive verification consensus (100% agreement). Integrated local claim inspectors and keyword scrapers to correctly flag fake claims (such as petrol price scams) on fallback.
-*   Corrected all old brand occurrences of "TruthLens" to **VeriLens AI** across the codebase.
+*   Renamed all brand occurrences to **TruthLens-AI** across the codebase.
 *   Hardened PDF and OCR exceptions to degrade gracefully with recovery tips.
