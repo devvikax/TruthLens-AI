@@ -118,6 +118,12 @@ export const useAnalysisStore = create((set, get) => ({
     }
   },
 
+  setAuthenticatedUser: (user) => {
+    localStorage.setItem('user_authenticated', 'true');
+    localStorage.setItem('user_profile', JSON.stringify(user));
+    set({ isAuthenticated: true, user });
+  },
+
   logoutUser: async () => {
     try {
       await apiClient.post('/auth/logout');

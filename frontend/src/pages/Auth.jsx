@@ -7,7 +7,7 @@ import { useToast } from '../context/ToastContext';
 export default function Auth() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { registerUser, loginUser, language } = useAnalysisStore();
+  const { registerUser, loginUser, setAuthenticatedUser, language } = useAnalysisStore();
   
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
@@ -48,10 +48,7 @@ export default function Auth() {
   };
 
   const handleGoogleOAuth = () => {
-    // google OAuth mock triggers
-    localStorage.setItem('user_authenticated', 'true');
-    localStorage.setItem('user_profile', JSON.stringify({ name: 'Google User', email: 'user@google.com' }));
-    useAnalysisStore.setState({ isAuthenticated: true, user: { name: 'Google User', email: 'user@google.com' } });
+    setAuthenticatedUser({ name: 'Google User', email: 'user@google.com' });
     showToast(
       language === 'en' ? 'Signed in with Google!' : 'गूगल के साथ लॉगिन सफल!',
       'success'
