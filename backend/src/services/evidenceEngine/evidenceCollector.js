@@ -150,9 +150,9 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
     );
   } else if (claimType === 'Sports') {
     adapterPromises.push(
-      runSearch(internationalAdapter, queries.officialVerification, 2),
-      runSearch(newsAdapter, queries.latestNews, 2),
-      runSearch(webSearchAdapter, queries.entitySpecific, 1)
+      runSearch(newsAdapter, queries.positiveEvidence, 2),
+      runSearch(factCheckAdapter, queries.factCheck, 2),
+      runSearch(newsAdapter, queries.latestNews, 1)
     );
   } else if (claimType === 'Space' || claimType === 'Science') {
     adapterPromises.push(
@@ -402,7 +402,17 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
       }
     }
 
-    const minBodyLen = (skipCrawling || item.isFallbackSnippet) ? 15 : 50;
+    let minBodyLen = (skipCrawling || item.isFallbackSnippet) ? 15 : 50;
+    if (!scrapedData || !scrapedData.body || scrapedData.body.trim().length < minBodyLen) {
+      console.warn(`- Scraped body too short for ${item.url}. Falling back to search snippet.`);
+      scrapedData = {
+        title: item.title,
+        body: item.snippet || item.title,
+        metaDescription: ''
+      };
+      minBodyLen = 15;
+    }
+
     if (!scrapedData || !scrapedData.body || scrapedData.body.trim().length < minBodyLen) {
       return {
         isValid: false,
