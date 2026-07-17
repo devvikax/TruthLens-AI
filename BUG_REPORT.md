@@ -50,3 +50,11 @@ This document logs all bugs detected and resolved during the Quality Assurance a
     1. Integrated `AsyncLocalStorage` in `aiOrchestrator.js` to log prompts and replies on the fly.
     2. Updated `index.js` to capture traces, queries, and rejected lists and save them inside the `metadata` Mixed field in MongoDB.
     3. Rebuilt the frontend `Results.jsx` and `DeveloperSandbox.jsx` views to access and render these metadata parameters.
+
+### Bug 8: Curated Sandbox Mock PDF & Image Analysis Fails (Severity: Critical)
+*   **Symptom**: When testing with preconfigured sandbox PDF or Image templates, the system crashed with a 400 Bad Request error.
+*   **Root Cause**: Clicking a sandbox card populated the workspace with a mock file descriptor (a plain JS object). When submitting, `FormData` serialized this object to `"[object Object]"` instead of a real file. Because of this, Multer failed to parse it as a file, and the empty text input fell back to an empty string validation crash.
+*   **Resolution**: 
+    1. Updated `Analysis.jsx` to load and pass the raw text content of the selected mock template as the `input` payload.
+    2. Updated `analysisStore.js` to detect mock file descriptors, bypass standard file streaming, and append `mockType` and `mockFileName` parameters instead.
+    3. Updated the backend `deepAnalysis` controller in `analysisController.js` to intercept requests containing `mockType` and parse the text payload directly, while maintaining the correct file context.

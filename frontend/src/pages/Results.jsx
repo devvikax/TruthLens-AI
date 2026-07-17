@@ -3,7 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, Printer, MessageSquare, AlertTriangle, CheckCircle, Share2, 
   Copy, FileText, ChevronDown, ChevronUp, Clock, Calendar, ExternalLink, 
-  Activity, Scale, ShieldAlert, Award, Compass, RefreshCw, BarChart2, Check, X, ShieldCheck
+  Activity, Scale, ShieldAlert, Award, Compass, RefreshCw, BarChart2, Check, X, ShieldCheck,
+  Image as ImageIcon, Globe
 } from 'lucide-react';
 import { useAnalysisStore } from '../store/analysisStore';
 import TrustGauge from '../components/TrustGauge';
@@ -14,14 +15,26 @@ import apiClient from '../services/api';
 export default function Results() {
   const navigate = useNavigate();
   const { showToast } = useToast();
-  const { currentAnalysis, resetAnalysis, language } = useAnalysisStore();
+  const { currentAnalysis, resetAnalysis, language, lastAnalyzedFile } = useAnalysisStore();
   const [chatOpen, setChatOpen] = useState(false);
   const [sessionId, setSessionId] = useState(null);
   const [nudgeOpen, setNudgeOpen] = useState(false);
+  const [imgUrl, setImgUrl] = useState(null);
   
   // Track claim & evidence chain steps expanded state
   const [expandedClaims, setExpandedClaims] = useState({});
   const [expandedChainStep, setExpandedChainStep] = useState(null);
+
+  // Hook up object URL for local image preview
+  useEffect(() => {
+    if (lastAnalyzedFile && (lastAnalyzedFile instanceof File || lastAnalyzedFile instanceof Blob)) {
+      const url = URL.createObjectURL(lastAnalyzedFile);
+      setImgUrl(url);
+      return () => {
+        URL.revokeObjectURL(url);
+      };
+    }
+  }, [lastAnalyzedFile]);
 
   // XAI explainability style options
   const [persona, setPersona] = useState('general');
@@ -339,6 +352,252 @@ Think Before You Share. Ground truth verified at TruthLens-AI.`;
               <p style={{ margin: 0, fontSize: '0.88rem', fontWeight: 600 }}>
                 {metrics.trustScore < 40 ? '🚫 Refuse to share. Correct peers.' : metrics.trustScore < 75 ? '⚠️ Inspect contradictions first.' : '✅ Share freely with verified citations.'}
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Inspected Evidence Exhibit Section */}
+      <section className="glass animate-fade" style={{
+        padding: 'var(--space-xl)',
+        backgroundColor: 'var(--bg-secondary)',
+        border: '3px solid #000000',
+        boxShadow: '6px 6px 0px #000000',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 'var(--space-md)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <ImageIcon size={22} color="var(--color-primary)" />
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, margin: 0 }}>
+            {language === 'en' ? 'COURT EXHIBIT A: SOURCE EVIDENCE MATERIAL' : 'कोर्ट प्रदर्शनी ए: स्रोत साक्ष्य सामग्री'}
+          </h3>
+        </div>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+          gap: 'var(--space-lg)',
+          alignItems: 'center'
+        }}>
+          {/* Left Side: Exhibit Visual/Icon representation */}
+          <div style={{ display: 'flex', justifyContent: 'center', width: '100%' }}>
+            {currentAnalysis.inputType === 'image' && (
+              imgUrl ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+                  <img 
+                    src={imgUrl} 
+                    alt="Inspected Court Exhibit" 
+                    style={{ 
+                      width: '100%', 
+                      maxHeight: '280px', 
+                      objectFit: 'contain', 
+                      border: '3px solid #000000', 
+                      boxShadow: '4px 4px 0px #000000', 
+                      borderRadius: 'var(--radius-xs)',
+                      backgroundColor: '#000000'
+                    }} 
+                  />
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {language === 'en' ? 'Uploaded Image Capture Preview' : 'अपलोड की गई छवि का पूर्वावलोकन'}
+                  </span>
+                </div>
+              ) : (
+                /* High fidelity warning mock graphic for OS software rumor or generic image */
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+                  <div style={{
+                    background: '#090a0f',
+                    border: '3px solid #000000',
+                    borderRadius: 'var(--radius-sm)',
+                    boxShadow: '4px 4px 0px #000000',
+                    width: '100%',
+                    maxWidth: '220px',
+                    padding: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                    color: '#f8fafc',
+                    fontFamily: 'monospace',
+                    textAlign: 'left'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.6rem', color: '#64748b' }}>
+                      <span>SYSTEM TRACE</span>
+                      <span>🔋 74%</span>
+                    </div>
+                    <div style={{
+                      backgroundColor: '#fb7185',
+                      border: '2px solid #000000',
+                      padding: '6px',
+                      color: '#000000',
+                      borderRadius: 'var(--radius-xs)',
+                      boxShadow: '2px 2px 0px #000000',
+                      fontSize: '0.72rem',
+                      fontWeight: 900,
+                      textAlign: 'center',
+                      textTransform: 'uppercase',
+                      marginTop: '15px'
+                    }}>
+                      🚨 ALERT: BATTERY SWELL
+                    </div>
+                    <p style={{ fontSize: '0.65rem', lineHeight: '1.4', color: '#cbd5e1', marginTop: '8px', marginBottom: 0 }}>
+                      "The new OS update is causing batteries to swell up and explode. Do not download!"
+                    </p>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>
+                    {language === 'en' ? 'Simulated Mobile Rumor Screenshot' : 'सिम्युलेटेड मोबाइल अफवाह स्क्रीनशॉट'}
+                  </span>
+                </div>
+              )
+            )}
+
+            {currentAnalysis.inputType === 'pdf' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--space-xl)',
+                border: '3px solid #000000',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-tertiary)',
+                boxShadow: '4px 4px 0px #000000',
+                gap: '12px',
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '300px'
+              }}>
+                <FileText size={48} color="var(--color-primary)" />
+                <div>
+                  <strong style={{ display: 'block', fontSize: '0.9rem', wordBreak: 'break-all' }}>
+                    {lastAnalyzedFile?.name || 'NASA_Science_Review.pdf'}
+                  </strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    PDF Exhibit Attachment
+                  </span>
+                </div>
+                <span className="badge badge-success" style={{ fontSize: '0.7rem' }}>
+                  {language === 'en' ? 'PDF DOCUMENT' : 'पीडीएफ दस्तावेज़'}
+                </span>
+              </div>
+            )}
+
+            {currentAnalysis.inputType === 'url' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--space-xl)',
+                border: '3px solid #000000',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-tertiary)',
+                boxShadow: '4px 4px 0px #000000',
+                gap: '12px',
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '320px'
+              }}>
+                <Globe size={48} color="var(--color-info)" />
+                <div style={{ width: '100%' }}>
+                  <strong style={{ display: 'block', fontSize: '0.88rem', wordBreak: 'break-all', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {currentAnalysis.sourceUrl}
+                  </strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '2px' }}>
+                    {language === 'en' ? 'Scraped Website link' : 'स्क्रेप किया गया वेबसाइट लिंक'}
+                  </span>
+                </div>
+                <a 
+                  href={currentAnalysis.sourceUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer" 
+                  className="btn btn-secondary" 
+                  style={{ padding: '6px 12px', fontSize: '0.75rem' }}
+                >
+                  <span>{language === 'en' ? 'Visit URL Link' : 'यूआरएल लिंक देखें'}</span>
+                  <ExternalLink size={12} />
+                </a>
+              </div>
+            )}
+
+            {currentAnalysis.inputType === 'text' && (
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: 'var(--space-xl)',
+                border: '3px solid #000000',
+                borderRadius: 'var(--radius-sm)',
+                backgroundColor: 'var(--bg-tertiary)',
+                boxShadow: '4px 4px 0px #000000',
+                gap: '12px',
+                textAlign: 'center',
+                width: '100%',
+                maxWidth: '300px'
+              }}>
+                <FileText size={48} color="var(--color-primary)" />
+                <div>
+                  <strong style={{ display: 'block', fontSize: '0.9rem' }}>
+                    {language === 'en' ? 'Plain Text Payload' : 'सादा पाठ पेलोड'}
+                  </strong>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    {language === 'en' ? 'Clipboard Plaintext Exhibit' : 'क्लिपबोर्ड प्लेनटेक्स्ट पेलोड'}
+                  </span>
+                </div>
+                <span className="badge badge-warning" style={{ fontSize: '0.7rem' }}>
+                  {language === 'en' ? 'TEXT INPUT' : 'टेक्स्ट इनपुट'}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Right Side: Monospace console readouts */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: 'var(--text-muted)', fontWeight: 600 }}>
+                {language === 'en' ? 'Extracted Text Payload Ledger' : 'निकाले गए पाठ का पेलोड बहीखाता'}
+              </span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(rawInput);
+                  showToast(
+                    language === 'en' ? 'Exhibit text copied!' : 'प्रदर्शनी पाठ कॉपी किया गया!',
+                    'success'
+                  );
+                }}
+                className="btn btn-secondary" 
+                style={{ padding: '3px 8px', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '4px' }}
+              >
+                <Copy size={12} />
+                <span>{language === 'en' ? 'Copy Text' : 'पाठ कॉपी करें'}</span>
+              </button>
+            </div>
+
+            <div style={{
+              width: '100%',
+              backgroundColor: '#000000',
+              color: '#ffffff',
+              fontFamily: 'var(--font-mono)',
+              fontSize: '0.82rem',
+              padding: 'var(--space-md)',
+              borderRadius: 'var(--radius-xs)',
+              border: '3px solid #000000',
+              maxHeight: '220px',
+              overflowY: 'auto',
+              whiteSpace: 'pre-wrap',
+              boxShadow: 'inset 0 2px 8px rgba(0, 0, 0, 0.7)',
+              textAlign: 'left'
+            }}>
+              {rawInput}
+            </div>
+
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600, display: 'flex', gap: '10px' }}>
+              <span>
+                {currentAnalysis.inputType === 'image' && `📸 OCR engine successfully parsed ${rawInput?.split(/\s+/).length || 0} words.`}
+                {currentAnalysis.inputType === 'pdf' && `📄 PDF text parser successfully extracted ${rawInput?.split(/\s+/).length || 0} words.`}
+                {currentAnalysis.inputType === 'url' && `🌐 JSDOM scrape engine successfully pulled ${rawInput?.split(/\s+/).length || 0} words.`}
+                {currentAnalysis.inputType === 'text' && `📝 Plain text check of ${rawInput?.split(/\s+/).length || 0} words.`}
+              </span>
             </div>
           </div>
         </div>

@@ -35,6 +35,7 @@ export const useAnalysisStore = create((set, get) => ({
   // App States
   isAnalyzing: false,
   currentAnalysis: null,
+  lastAnalyzedFile: null,
   history: [],
   processingSteps: INITIAL_STEPS,
 
@@ -160,13 +161,14 @@ export const useAnalysisStore = create((set, get) => ({
   resetAnalysis: () => {
     set({
       currentAnalysis: null,
+      lastAnalyzedFile: null,
       isAnalyzing: false,
       processingSteps: INITIAL_STEPS.map(step => ({ ...step, status: "idle" }))
     });
   },
 
   analyzeContent: async (type, input, file = null) => {
-    set({ isAnalyzing: true, currentAnalysis: null });
+    set({ isAnalyzing: true, currentAnalysis: null, lastAnalyzedFile: file });
     
     // Scaffolding steps
     const steps = INITIAL_STEPS.map(step => ({ ...step, status: "idle" }));
@@ -189,8 +191,16 @@ export const useAnalysisStore = create((set, get) => ({
       let res;
       if (type === 'image' || type === 'pdf') {
         const formData = new FormData();
-        formData.append('file', file);
-        if (input) formData.append('input', input);
+        const isMock = file && !(file instanceof File) && !(file instanceof Blob);
+        
+        if (isMock) {
+          formData.append('mockType', type);
+          formData.append('mockFileName', file.name);
+          if (input) formData.append('input', input);
+        } else {
+          formData.append('file', file);
+          if (input) formData.append('input', input);
+        }
 
         res = await apiClient.post('/analysis/deep', formData, {
           headers: { 'Content-Type': 'multipart/form-data' }

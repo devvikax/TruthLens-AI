@@ -21,20 +21,36 @@ export default function Home() {
 
     resize();
     window.addEventListener('resize', resize);
-    // Extra safety update after a short delay to account for layouts settling
     const timer = setTimeout(resize, 300);
 
-    // Dotted particle field
-    const dotsCount = 75;
+    // Mouse tracking for antigravity push
+    const mouse = { x: -1000, y: -1000, active: false };
+    const handleMouseMove = (e) => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+      mouse.active = true;
+    };
+    const handleMouseLeave = () => {
+      mouse.x = -1000;
+      mouse.y = -1000;
+      mouse.active = false;
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseleave', handleMouseLeave);
+
+    // Antigravity upward floating particles
+    const dotsCount = 80;
     const dots = [];
-    const colors = ['#facc15', '#22d3ee', '#f472b6']; // Theme Stark Yellow, Cyan, Pink
+    const colors = ['#facc15', '#22d3ee', '#f472b6']; // Stark Yellow, Cyan, Pink
 
     for (let i = 0; i < dotsCount; i++) {
       dots.push({
         x: Math.random() * window.innerWidth,
         y: Math.random() * window.innerHeight,
-        vx: (Math.random() - 0.5) * 0.45,
-        vy: (Math.random() - 0.5) * 0.45,
+        vx: (Math.random() - 0.5) * 0.3, // Slight horizontal drift
+        vy: (Math.random() * -0.5) - 0.25, // Upward velocity (Antigravity float)
         radius: Math.random() * 2 + 1.2,
         color: colors[Math.floor(Math.random() * colors.length)]
       });
@@ -47,11 +63,21 @@ export default function Home() {
       // Clear canvas
       ctx.clearRect(0, 0, w, h);
 
-      // Check current theme
       const isLight = document.documentElement.getAttribute('data-theme') === 'light';
-      const lineColor = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)';
 
-      // Draw faint connections between nearby dots
+      // 1. Draw static grid of reference dots (field baseline)
+      const gridSpacing = 60;
+      ctx.fillStyle = isLight ? 'rgba(0, 0, 0, 0.03)' : 'rgba(255, 255, 255, 0.03)';
+      for (let gx = 0; gx < w; gx += gridSpacing) {
+        for (let gy = 0; gy < h; gy += gridSpacing) {
+          ctx.beginPath();
+          ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // 2. Draw connections between nearby floating dots
+      const lineColor = isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.04)';
       ctx.strokeStyle = lineColor;
       ctx.lineWidth = 0.75;
       for (let i = 0; i < dotsCount; i++) {
@@ -69,22 +95,61 @@ export default function Home() {
         }
       }
 
-      // Draw drifting dots
+      // 3. Draw connection lines to mouse pointer (gravity webs)
+      if (mouse.active) {
+        dots.forEach(dot => {
+          const dx = dot.x - mouse.x;
+          const dy = dot.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 140) {
+            ctx.strokeStyle = isLight 
+              ? `rgba(0, 0, 0, ${0.08 * (1 - dist / 140)})` 
+              : `rgba(255, 255, 255, ${0.08 * (1 - dist / 140)})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(dot.x, dot.y);
+            ctx.lineTo(mouse.x, mouse.y);
+            ctx.stroke();
+          }
+        });
+      }
+
+      // 4. Update and draw active floating dots
       dots.forEach(dot => {
         ctx.beginPath();
         ctx.arc(dot.x, dot.y, dot.radius, 0, Math.PI * 2);
         ctx.fillStyle = dot.color;
         ctx.fill();
 
-        // Update positions
+        // Update positions (Basic drift)
         dot.x += dot.vx;
         dot.y += dot.vy;
 
-        // Wrap around borders smoothly
+        // Apply mouse repulsion (Push away from mouse)
+        if (mouse.active) {
+          const dx = dot.x - mouse.x;
+          const dy = dot.y - mouse.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          const pushRadius = 150;
+
+          if (dist < pushRadius) {
+            const force = (pushRadius - dist) / pushRadius;
+            const angle = Math.atan2(dy, dx);
+            
+            // Push dot away with easing force
+            dot.x += Math.cos(angle) * force * 3;
+            dot.y += Math.sin(angle) * force * 3;
+          }
+        }
+
+        // Float upwards wrap-around: respawn at the bottom if it exits top
+        if (dot.y < -10) {
+          dot.y = h + 10;
+          dot.x = Math.random() * w;
+          dot.vy = (Math.random() * -0.5) - 0.25; // reset upward speed
+        }
         if (dot.x < -10) dot.x = w + 10;
         if (dot.x > w + 10) dot.x = -10;
-        if (dot.y < -10) dot.y = h + 10;
-        if (dot.y > h + 10) dot.y = -10;
       });
 
       animationFrameId = requestAnimationFrame(draw);
@@ -94,6 +159,8 @@ export default function Home() {
 
     return () => {
       window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseleave', handleMouseLeave);
       clearTimeout(timer);
       cancelAnimationFrame(animationFrameId);
     };

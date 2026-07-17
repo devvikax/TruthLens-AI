@@ -160,12 +160,12 @@ export default function Chat({ sessionId, onClose }) {
               justifyContent: 'center',
               flexShrink: 0
             }}>
-              {msg.sender === 'user' ? <User size={14} color="white" /> : <Bot size={14} color="var(--color-primary)" />}
+              {msg.sender === 'user' ? <User size={14} color="#000000" /> : <Bot size={14} color="var(--color-primary)" />}
             </div>
             
             <div style={{
               backgroundColor: msg.sender === 'user' ? 'var(--color-primary)' : 'var(--bg-tertiary)',
-              color: msg.sender === 'user' ? 'white' : 'var(--text-primary)',
+              color: msg.sender === 'user' ? '#000000' : 'var(--text-primary)',
               padding: '10px 14px',
               borderRadius: msg.sender === 'user' 
                 ? 'var(--radius-lg) 0 var(--radius-lg) var(--radius-lg)' 

@@ -61,5 +61,5 @@
 - [x] Rewrite `global.css` utilities to apply thick `3px solid #000000` borders and zero-blur hard offsets (`box-shadow: 4px 4px 0px #000000`).
 - [x] Add click motion translations (translate `-2px, -2px` with a `6px` shadow on hover; `2px, 2px` with `2px` shadow on active press) to interactive elements.
 - [x] Rebuild the analysis progress loader screen to feature a digital forensic scanning hologram target with live timestamped monospace logs.
-- [x] Create a custom high-performance canvas background in `Home.jsx` rendering drifting, theme-synced particle dots connected by dynamic mesh lines.
+- [x] Create a custom high-performance canvas background in `Home.jsx` rendering interactive antigravity upward-floating particles, baseline grids, and mouse repulsion webs.
 - [x] Verify successful compilation with production build script.

@@ -120,14 +120,20 @@ const quickAnalysis = async (req, res, next) => {
 const deepAnalysis = async (req, res, next) => {
   let fileRelativePath = '';
   try {
-    const { input } = req.body;
+    const { input, mockType, mockFileName } = req.body;
     let rawTextPayload = input || '';
     let title = 'Deep Analysis Search';
     let sourceUrl = '';
     let inputType = 'text';
 
-    // 1. File text extraction pipeline
-    if (req.file) {
+    // 1. Mock file interception for Demo Mode
+    if (mockType) {
+      inputType = mockType;
+      rawTextPayload = input || '';
+      title = mockType === 'pdf' 
+        ? `Document: ${mockFileName || 'nasa_research_report.pdf'}` 
+        : `Screenshot OCR: ${mockFileName || 'whatsapp_forward_os_rumor.png'}`;
+    } else if (req.file) {
       fileRelativePath = `/uploads/${req.file.filename}`;
       const absoluteFilePath = path.join(__dirname, '../../uploads', req.file.filename);
 

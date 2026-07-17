@@ -90,7 +90,16 @@ export default function Analysis() {
       }
     }
 
-    const baseInput = activeTab === 'text' ? textInput : activeTab === 'url' ? urlInput : '';
+    let baseInput = '';
+    if (activeTab === 'text') {
+      baseInput = textInput;
+    } else if (activeTab === 'url') {
+      baseInput = urlInput;
+    } else if (uploadedFile && !(uploadedFile instanceof File) && !(uploadedFile instanceof Blob)) {
+      const template = MOCK_TEMPLATES[selectedTemplateKey] || MOCK_TEMPLATES.credible;
+      baseInput = template.rawInput;
+    }
+
     // Append forced clarification entity details to query if user confirmed selection
     const finalInputData = forcedEntityValue ? `${baseInput} (Context: verifying specifically about ${forcedEntityValue})` : baseInput;
 
@@ -133,35 +142,8 @@ export default function Analysis() {
     <div className="container" style={{ padding: 'var(--space-2xl) 0', maxWidth: '850px' }}>
       
       {isAnalyzing ? (
-        /* Cyberpunk Holographic Scanning Loader & Console Readout */
         <div style={{ position: 'relative', width: '100%', display: 'flex', justifyContent: 'center' }}>
-          {/* Floating background glowing ambient lenses */}
-          <div style={{
-            position: 'absolute',
-            width: '350px',
-            height: '350px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(0, 102, 255, 0.08)',
-            filter: 'blur(90px)',
-            top: '0%',
-            left: '5%',
-            zIndex: -1,
-            pointerEvents: 'none'
-          }} />
-          <div style={{
-            position: 'absolute',
-            width: '300px',
-            height: '300px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(112, 0, 255, 0.06)',
-            filter: 'blur(80px)',
-            bottom: '0%',
-            right: '5%',
-            zIndex: -1,
-            pointerEvents: 'none'
-          }} />
-
-          <div className="glass-card animate-fade" style={{
+          <div className="glass animate-fade" style={{
             textAlign: 'center',
             padding: 'var(--space-2xl)',
             display: 'flex',
@@ -169,8 +151,9 @@ export default function Analysis() {
             alignItems: 'center',
             gap: 'var(--space-xl)',
             width: '100%',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
-            boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)'
+            backgroundColor: 'var(--bg-secondary)',
+            border: '3px solid #000000',
+            boxShadow: '6px 6px 0px #000000'
           }}>
             {/* Holographic Spinning Target */}
             <div style={{ position: 'relative', width: '120px', height: '120px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '8px' }}>
@@ -223,26 +206,25 @@ export default function Analysis() {
               </p>
             </div>
 
-            {/* Premium Animated Progress Bar */}
+            {/* Brutalist Hard-Bordered Progress Bar */}
             <div style={{
               width: '100%',
               maxWidth: '480px',
-              height: '5px',
+              height: '16px',
               backgroundColor: 'var(--bg-tertiary)',
-              borderRadius: 'var(--radius-full)',
+              borderRadius: 'var(--radius-xs)',
               overflow: 'hidden',
               margin: '-4px 0 0 0',
               position: 'relative',
-              border: '1px solid var(--border-color)'
+              border: '3px solid #000000',
+              boxShadow: '2px 2px 0px #000000'
             }}>
-              {/* Moving scanner line effect */}
               <div style={{
                 width: `${progressPercent}%`,
                 height: '100%',
-                backgroundImage: 'linear-gradient(90deg, var(--color-primary) 0%, var(--border-focus) 100%)',
-                borderRadius: 'var(--radius-full)',
-                transition: 'width 500ms cubic-bezier(0.16, 1, 0.3, 1)',
-                boxShadow: 'var(--shadow-glow)'
+                backgroundColor: 'var(--color-primary)',
+                borderRight: progressPercent > 0 && progressPercent < 100 ? '3px solid #000000' : 'none',
+                transition: 'width 500ms cubic-bezier(0.16, 1, 0.3, 1)'
               }} />
             </div>
 
@@ -251,14 +233,14 @@ export default function Analysis() {
               width: '100%',
               maxWidth: '480px',
               textAlign: 'left',
-              backgroundColor: '#020617',
+              backgroundColor: '#000000',
               padding: 'var(--space-lg)',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(255, 255, 255, 0.05)',
+              borderRadius: 'var(--radius-xs)',
+              border: '3px solid #000000',
               display: 'flex',
               flexDirection: 'column',
               gap: '10px',
-              boxShadow: 'inset 0 2px 10px rgba(0, 0, 0, 0.6)'
+              boxShadow: '4px 4px 0px rgba(0, 0, 0, 0.15)'
             }}>
               {processingSteps.map((step, idx) => {
                 const simulatedSec = (idx * 6).toString().padStart(2, '0');
@@ -270,23 +252,23 @@ export default function Analysis() {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 'var(--space-sm)',
-                      opacity: step.status === 'idle' ? 0.3 : 1,
-                      fontFamily: 'monospace',
+                      opacity: step.status === 'idle' ? 0.4 : 1,
+                      fontFamily: 'var(--font-mono)',
                       fontSize: '0.8rem',
                       transition: 'opacity var(--transition-fast)'
                     }}
                   >
-                    <span style={{ color: 'var(--text-muted)', marginRight: '4px' }}>{timestamp}</span>
+                    <span style={{ color: 'rgba(255, 255, 255, 0.4)', marginRight: '4px' }}>{timestamp}</span>
                     {step.status === 'completed' ? (
-                      <CheckCircle2 size={14} color="var(--color-success)" style={{ flexShrink: 0 }} />
+                      <CheckCircle2 size={14} color="#10b981" style={{ flexShrink: 0 }} />
                     ) : step.status === 'running' ? (
                       <div className="loader" style={{ width: '12px', height: '12px', borderWidth: '1.5px', flexShrink: 0 }}></div>
                     ) : (
-                      <Circle size={14} color="var(--text-muted)" style={{ flexShrink: 0 }} />
+                      <Circle size={14} color="rgba(255, 255, 255, 0.3)" style={{ flexShrink: 0 }} />
                     )}
                     <span style={{ 
                       fontWeight: step.status === 'running' ? 700 : 400,
-                      color: step.status === 'completed' ? '#10b981' : step.status === 'running' ? 'var(--color-primary)' : 'var(--text-secondary)',
+                      color: step.status === 'completed' ? '#10b981' : step.status === 'running' ? 'var(--color-primary)' : 'rgba(255, 255, 255, 0.65)',
                       letterSpacing: '0.02em'
                     }}>
                       {step.text.toUpperCase()}
@@ -309,6 +291,134 @@ export default function Analysis() {
             </p>
           </div>
 
+          {/* Premium Segmented Control Tabs - Brutalist Multi-Segment Border Control */}
+          <div style={{
+            display: 'flex',
+            backgroundColor: 'var(--bg-secondary)',
+            borderRadius: 'var(--radius-xs)',
+            border: '3px solid #000000',
+            boxShadow: '4px 4px 0px #000000',
+            overflow: 'hidden'
+          }}>
+            {tabs.map((tab, idx) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => { setActiveTab(tab.id); setUploadedFile(null); }}
+                  style={{
+                    backgroundColor: isActive ? 'var(--color-primary)' : 'var(--bg-tertiary)',
+                    color: isActive ? '#000000' : 'var(--text-primary)',
+                    fontWeight: 900,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.05em',
+                    padding: '0.9rem 1.1rem',
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    border: 'none',
+                    borderRight: idx === tabs.length - 1 ? 'none' : '3px solid #000000',
+                    transition: 'background-color var(--transition-fast)'
+                  }}
+                >
+                  {tab.icon}
+                  <span style={{ fontSize: '0.82rem' }}>{language === 'en' ? tab.labelEn : tab.labelHi}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Tab Panel Context - Brutalist Container */}
+          <div className="glass-card" style={{
+            padding: 'var(--space-xl)',
+            minHeight: '260px',
+            backgroundColor: 'var(--bg-secondary)',
+            border: '3px solid #000000',
+            boxShadow: '6px 6px 0px #000000',
+            borderRadius: 'var(--radius-md)'
+          }}>
+            
+            {activeTab === 'text' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                <textarea
+                  className="input-field"
+                  placeholder={language === 'en' ? 'Paste the news article or post body here...' : 'समाचार लेख या पोस्ट का मुख्य भाग यहाँ पेस्ट करें...'}
+                  value={textInput}
+                  onChange={(e) => setTextInput(e.target.value)}
+                  maxLength={10000}
+                  style={{ minHeight: '180px', resize: 'vertical', border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
+                  aria-label="Raw Text Submission Input"
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  <span>{language === 'en' ? 'Supports English & Hindi' : 'अंग्रेजी और हिंदी का समर्थन करता है'}</span>
+                  <span>{textInput.length} / 10000 {language === 'en' ? 'chars' : 'अक्षर'}</span>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'url' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
+                <label style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', letterSpacing: '0.02em' }}>
+                  {language === 'en' ? 'Article URL / Link' : 'लेख यूआरएल / लिंक'}
+                </label>
+                <input
+                  type="url"
+                  className="input-field"
+                  placeholder="https://example.com/news-story"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  style={{ border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
+                  aria-label="Website Link Submission Input"
+                />
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
+                  {language === 'en' ? 'E.g., news portals, research pages, blog posts, YouTube/Reels video links.' : 'उदा. समाचार पोर्टल, शोध पृष्ठ, ब्लॉग पोस्ट, यूट्यूब/रील्स वीडियो लिंक।'}
+                </span>
+              </div>
+            )}
+
+            {activeTab === 'image' && (
+              <UploadZone
+                acceptType="image/*"
+                file={uploadedFile}
+                onFileSelected={setUploadedFile}
+              />
+            )}
+
+            {activeTab === 'pdf' && (
+              <UploadZone
+                acceptType="application/pdf"
+                file={uploadedFile}
+                onFileSelected={setUploadedFile}
+              />
+            )}
+
+          </div>
+
+          {/* Action Trigger - Massive Brutalist Launch Button */}
+          <button
+            onClick={() => handleStartAnalysis()}
+            className="btn btn-primary btn-large"
+            style={{
+              width: '100%',
+              marginTop: 'var(--space-md)',
+              padding: '1.25rem',
+              fontSize: '1.1rem',
+              backgroundColor: 'var(--color-primary)',
+              color: '#000000',
+              border: '3px solid #000000',
+              boxShadow: '6px 6px 0px #000000',
+              transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)'
+            }}
+          >
+            <Play size={20} fill="currentColor" />
+            <span style={{ fontWeight: 900, letterSpacing: '0.06em' }}>
+              {language === 'en' ? 'LAUNCH FORENSIC AUDIT' : 'फॉरेंसिक ऑडिट शुरू करें'}
+            </span>
+          </button>
+
           {/* Curated Demo Mode Panel (resettable sandbox) */}
           <div className="glass-card" style={{
             border: '3px solid #000000',
@@ -318,7 +428,8 @@ export default function Analysis() {
             display: 'flex',
             flexDirection: 'column',
             gap: 'var(--space-md)',
-            borderRadius: 'var(--radius-md)'
+            borderRadius: 'var(--radius-md)',
+            marginTop: 'var(--space-md)'
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -619,134 +730,6 @@ export default function Analysis() {
               </div>
             </div>
           </div>
-
-          {/* Premium Segmented Control Tabs - Brutalist Multi-Segment Border Control */}
-          <div style={{
-            display: 'flex',
-            backgroundColor: 'var(--bg-secondary)',
-            borderRadius: 'var(--radius-xs)',
-            border: '3px solid #000000',
-            boxShadow: '4px 4px 0px #000000',
-            overflow: 'hidden'
-          }}>
-            {tabs.map((tab, idx) => {
-              const isActive = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => { setActiveTab(tab.id); setUploadedFile(null); }}
-                  style={{
-                    backgroundColor: isActive ? 'var(--color-primary)' : 'var(--bg-tertiary)',
-                    color: '#000000',
-                    fontWeight: 900,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    padding: '0.9rem 1.1rem',
-                    flex: 1,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    cursor: 'pointer',
-                    border: 'none',
-                    borderRight: idx === tabs.length - 1 ? 'none' : '3px solid #000000',
-                    transition: 'background-color var(--transition-fast)'
-                  }}
-                >
-                  {tab.icon}
-                  <span style={{ fontSize: '0.82rem' }}>{language === 'en' ? tab.labelEn : tab.labelHi}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Tab Panel Context - Brutalist Container */}
-          <div className="glass-card" style={{
-            padding: 'var(--space-xl)',
-            minHeight: '260px',
-            backgroundColor: 'var(--bg-secondary)',
-            border: '3px solid #000000',
-            boxShadow: '6px 6px 0px #000000',
-            borderRadius: 'var(--radius-md)'
-          }}>
-            
-            {activeTab === 'text' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                <textarea
-                  className="input-field"
-                  placeholder={language === 'en' ? 'Paste the news article or post body here...' : 'समाचार लेख या पोस्ट का मुख्य भाग यहाँ पेस्ट करें...'}
-                  value={textInput}
-                  onChange={(e) => setTextInput(e.target.value)}
-                  maxLength={10000}
-                  style={{ minHeight: '180px', resize: 'vertical', border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
-                  aria-label="Raw Text Submission Input"
-                />
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  <span>{language === 'en' ? 'Supports English & Hindi' : 'अंग्रेजी और हिंदी का समर्थन करता है'}</span>
-                  <span>{textInput.length} / 10000 {language === 'en' ? 'chars' : 'अक्षर'}</span>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'url' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)' }}>
-                <label style={{ fontSize: '0.9rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', letterSpacing: '0.02em' }}>
-                  {language === 'en' ? 'Article URL / Link' : 'लेख यूआरएल / लिंक'}
-                </label>
-                <input
-                  type="url"
-                  className="input-field"
-                  placeholder="https://example.com/news-story"
-                  value={urlInput}
-                  onChange={(e) => setUrlInput(e.target.value)}
-                  style={{ border: '3px solid #000000', borderRadius: 'var(--radius-xs)' }}
-                  aria-label="Website Link Submission Input"
-                />
-                <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', fontWeight: 600 }}>
-                  {language === 'en' ? 'E.g., news portals, research pages, blog posts, YouTube/Reels video links.' : 'उदा. समाचार पोर्टल, शोध पृष्ठ, ब्लॉग पोस्ट, यूट्यूब/रील्स वीडियो लिंक।'}
-                </span>
-              </div>
-            )}
-
-            {activeTab === 'image' && (
-              <UploadZone
-                acceptType="image/*"
-                file={uploadedFile}
-                onFileSelected={setUploadedFile}
-              />
-            )}
-
-            {activeTab === 'pdf' && (
-              <UploadZone
-                acceptType="application/pdf"
-                file={uploadedFile}
-                onFileSelected={setUploadedFile}
-              />
-            )}
-
-          </div>
-
-          {/* Action Trigger - Massive Brutalist Launch Button */}
-          <button
-            onClick={() => handleStartAnalysis()}
-            className="btn btn-primary btn-large"
-            style={{
-              width: '100%',
-              marginTop: 'var(--space-md)',
-              padding: '1.25rem',
-              fontSize: '1.1rem',
-              backgroundColor: 'var(--color-primary)',
-              color: '#000000',
-              border: '3px solid #000000',
-              boxShadow: '6px 6px 0px #000000',
-              transition: 'transform var(--transition-fast), box-shadow var(--transition-fast)'
-            }}
-          >
-            <Play size={20} fill="currentColor" />
-            <span style={{ fontWeight: 900, letterSpacing: '0.06em' }}>
-              {language === 'en' ? 'LAUNCH FORENSIC AUDIT' : 'फॉरेंसिक ऑडिट शुरू करें'}
-            </span>
-          </button>
         </div>
       )}
 
