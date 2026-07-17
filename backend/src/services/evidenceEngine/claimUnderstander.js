@@ -174,18 +174,18 @@ const getFallbackClaimMetadata = (text) => {
 
   // 1. Death / Celebrity Death
   if (lowerText.includes('amitabh') || lowerText.includes('bachchan') || lowerText.includes('died') || lowerText.includes('death') || lowerText.includes('na rahe') || lowerText.includes('passed away') || lowerText.includes('rip')) {
-    normalizedClaim = lowerText.includes('amitabh') || lowerText.includes('bachchan') ? "Amitabh Bachchan has passed away." : text;
+    normalizedClaim = text;
     claimType = "Death / Celebrity Death";
     categories = ["Death / Celebrity Death", "Social Media Rumor"];
     subject = lowerText.includes('amitabh') || lowerText.includes('bachchan') ? "Amitabh Bachchan" : extractSubject(text, claimType);
     predicate = "has passed away";
     event = "death";
     intent = "Verify whether the subject is deceased.";
-    isVerifiableFactualClaim = true; // explicitly force true for verified targets
+    isVerifiableFactualClaim = true; 
   }
   // 2. Health / Medical
   else if ((lowerText.includes('who') && (lowerText.includes('coffee') || lowerText.includes('dangerous'))) || lowerText.includes('lemon') || lowerText.includes('soda') || lowerText.includes('cancer') || lowerText.includes('medical') || lowerText.includes('health') || lowerText.includes('covid') || lowerText.includes('vaccine')) {
-    normalizedClaim = lowerText.includes('coffee') ? "World Health Organization declared coffee consumption dangerous." : text;
+    normalizedClaim = text;
     claimType = "Health / Medical";
     categories = ["Health / Medical", "Social Media Rumor"];
     subject = lowerText.includes('coffee') ? "World Health Organization" : extractSubject(text, claimType);
@@ -196,7 +196,7 @@ const getFallbackClaimMetadata = (text) => {
   }
   // 3. Government Announcement
   else if ((lowerText.includes('isro') && lowerText.includes('gaganyaan')) || lowerText.includes('pib') || lowerText.includes('notification') || lowerText.includes('announcement') || lowerText.includes('government') || lowerText.includes('gazette') || lowerText.includes('ministry')) {
-    normalizedClaim = lowerText.includes('gaganyaan') ? "ISRO has successfully launched the Gaganyaan mission." : text;
+    normalizedClaim = text;
     claimType = "Government Announcement";
     categories = ["Government Announcement"];
     subject = lowerText.includes('isro') ? "ISRO" : extractSubject(text, claimType);
@@ -207,6 +207,7 @@ const getFallbackClaimMetadata = (text) => {
   }
   // 4. Election / Politics
   else if (lowerText.includes('election') || lowerText.includes('vote') || lowerText.includes('commission') || lowerText.includes('modi') || lowerText.includes('rahul') || lowerText.includes('bjp') || lowerText.includes('congress') || lowerText.includes('poll')) {
+    normalizedClaim = text;
     claimType = "Election / Politics";
     categories = ["Election / Politics"];
     subject = extractSubject(text, claimType);
@@ -217,18 +218,18 @@ const getFallbackClaimMetadata = (text) => {
   }
   // 5. Sports
   else if (lowerText.includes('virat') || lowerText.includes('kohli') || lowerText.includes('retired') || lowerText.includes('fifa') || lowerText.includes('cricket') || lowerText.includes('football') || lowerText.includes('championship')) {
-    normalizedClaim = lowerText.includes('virat') ? "Virat Kohli has retired from international cricket." : lowerText.includes('fifa') ? "India won the FIFA Football World Cup." : text;
+    normalizedClaim = text;
     claimType = "Sports";
     categories = ["Sports", "Social Media Rumor"];
-    subject = lowerText.includes('virat') ? "Virat Kohli" : lowerText.includes('fifa') ? "India National Football Team" : extractSubject(text, claimType);
-    predicate = "retired / won";
-    event = lowerText.includes('retired') ? "retirement" : "win";
+    subject = lowerText.includes('virat') || lowerText.includes('kohli') ? "Virat Kohli" : lowerText.includes('fifa') ? "India National Football Team" : extractSubject(text, claimType);
+    predicate = lowerText.includes('retir') ? "retired" : "active/won";
+    event = lowerText.includes('retir') ? "retirement" : "playing";
     intent = "Verify this sports event, retirement, or match result.";
     isVerifiableFactualClaim = true;
   }
   // 6. Space / Science
   else if (lowerText.includes('nasa') || lowerText.includes('aliens') || lowerText.includes('space') || lowerText.includes('mars') || lowerText.includes('moon') || lowerText.includes('isro') || lowerText.includes('galaxy') || lowerText.includes('universe')) {
-    normalizedClaim = lowerText.includes('aliens') ? "NASA has officially confirmed the existence of intelligent alien life." : text;
+    normalizedClaim = text;
     claimType = "Space";
     categories = ["Space", "Science"];
     subject = lowerText.includes('aliens') ? "NASA" : extractSubject(text, claimType);
@@ -239,7 +240,7 @@ const getFallbackClaimMetadata = (text) => {
   }
   // 7. Financial Scam / Investment
   else if (lowerText.includes('petrol') || lowerText.includes('rupees') || lowerText.includes('free') || lowerText.includes('scam') || lowerText.includes('investment') || lowerText.includes('recharge') || lowerText.includes('yojana') || lowerText.includes('rbi') || lowerText.includes('sebi')) {
-    normalizedClaim = lowerText.includes('petrol') ? "Petrol price has been reduced to 15 rupees per liter." : text;
+    normalizedClaim = text;
     claimType = "Financial Scam";
     categories = ["Financial Scam", "Investment"];
     subject = extractSubject(text, claimType);

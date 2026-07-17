@@ -499,24 +499,57 @@ const collectBidirectionalEvidence = async (claimMetadata, resolvedEntity, queri
       }
 
       let stance = 'context';
-      const contradictsKeywords = ['fake', 'hoax', 'false', 'rumor', 'misleading', 'never qualified', 'no evidence', 'debunk', 'not retired', 'alive', 'does not retire', 'गलत', 'फर्जी', 'झूठ'];
-      const supportsKeywords = ['confirm', 'success', 'launch', 'wins', 'healthy', 'still playing'];
-      
-      if (contradictsKeywords.some(kw => textBody.includes(kw))) {
-        stance = 'contradicts';
-      } else if (supportsKeywords.some(kw => textBody.includes(kw))) {
-        stance = 'supports';
-      }
-
       const claimLower = claimMetadata.normalizedClaim.toLowerCase();
-      if (claimLower.includes('retir') || claimLower.includes('retirement')) {
-        if (textBody.includes('selected') || textBody.includes('captain') || textBody.includes('squad') || textBody.includes('continues to represent') || textBody.includes('remains active')) {
+      const textLower = textBody.toLowerCase();
+
+      // Health remedies claims (e.g. lemon juice, baking soda)
+      if (claimLower.includes('lemon') || claimLower.includes('soda') || claimLower.includes('cure') || claimLower.includes('prevent')) {
+        if (textLower.includes('no evidence') || textLower.includes('myth') || textLower.includes('false') || textLower.includes('fake') || textLower.includes('misleading') || textLower.includes('warning') || textLower.includes('claims are false')) {
           stance = 'contradicts';
+        } else if (textLower.includes('cures') || textLower.includes('effective') || textLower.includes('prevents')) {
+          stance = 'supports';
         }
       }
-      if (claimLower.includes('died') || claimLower.includes('death')) {
-        if (textBody.includes('shoots') || textBody.includes('spotted') || textBody.includes('filming') || textBody.includes('active') || textBody.includes('healthy')) {
+      
+      // Death hoaxes / death statements (e.g. died, death, dead)
+      else if (claimLower.includes('die') || claimLower.includes('death') || claimLower.includes('pass away') || claimLower.includes('dead') || claimLower.includes('expired')) {
+        if (textLower.includes('alive') || textLower.includes('healthy') || textLower.includes('fake news') || textLower.includes('hoax') || textLower.includes('rumor') || textLower.includes('spotted') || textLower.includes('shoots') || textLower.includes('filming')) {
+          stance = 'contradicts'; // Contradicts death claim
+        } else if (textLower.includes('passed away') || textLower.includes('died') || textLower.includes('demise') || textLower.includes('condolence')) {
+          stance = 'supports'; // Confirms death claim
+        }
+      }
+      
+      // Alive / Active states (e.g. is alive, healthy, living)
+      else if (claimLower.includes('alive') || claimLower.includes('healthy') || claimLower.includes('active') || claimLower.includes('still playing')) {
+        if (textLower.includes('died') || textLower.includes('demise') || textLower.includes('condolence') || textLower.includes('passed away')) {
+          if (!textLower.includes('fake') && !textLower.includes('rumor') && !textLower.includes('hoax')) {
+            stance = 'contradicts'; // Contradicts alive claim
+          }
+        }
+        if (textLower.includes('alive') || textLower.includes('healthy') || textLower.includes('spotted') || textLower.includes('shoots') || textLower.includes('active')) {
+          stance = 'supports'; // Supports alive claim
+        }
+      }
+
+      // Retirement statements (e.g. retire, retirement)
+      else if (claimLower.includes('retir')) {
+        if (textLower.includes('not retired') || textLower.includes('fake') || textLower.includes('rumor') || textLower.includes('continues to represent') || textLower.includes('squad') || textLower.includes('active')) {
+          stance = 'contradicts'; // Contradicts retirement claim
+        } else if (textLower.includes('retires') || textLower.includes('announced retirement') || textLower.includes('hangs up boots')) {
+          stance = 'supports'; // Confirms retirement claim
+        }
+      }
+      
+      // Default heuristic
+      else {
+        const contradictsKeywords = ['fake', 'hoax', 'false', 'rumor', 'misleading', 'debunk', 'गलत', 'फर्जी', 'झूठ'];
+        const supportsKeywords = ['confirm', 'success', 'launch', 'wins', 'true', 'accurate'];
+        
+        if (contradictsKeywords.some(kw => textLower.includes(kw))) {
           stance = 'contradicts';
+        } else if (supportsKeywords.some(kw => textLower.includes(kw))) {
+          stance = 'supports';
         }
       }
 
