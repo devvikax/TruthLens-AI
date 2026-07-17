@@ -26,11 +26,10 @@ export const MOCK_TEMPLATES = {
 };
 
 export const useAnalysisStore = create((set, get) => ({
-  // Core Settings & Session state
   theme: localStorage.getItem('theme') || 'dark',
   language: localStorage.getItem('lang') || 'en',
-  isAuthenticated: localStorage.getItem('user_authenticated') === 'true',
-  user: JSON.parse(localStorage.getItem('user_profile')) || null,
+  isAuthenticated: false,
+  user: null,
 
   // App States
   isAnalyzing: false,
@@ -233,9 +232,26 @@ export const useAnalysisStore = create((set, get) => ({
         analysisResult.verdict = ts >= 75 ? 'Likely Genuine' : ts < 40 ? 'Likely Misleading' : 'Needs Verification';
       }
 
+      // Automatically append to local guest history
+      const localHistory = JSON.parse(localStorage.getItem('analysis_history')) || [];
+      const ts = analysisResult.metrics.trustScore;
+      const newItem = {
+        id: analysisResult._id || Date.now().toString(),
+        title: analysisResult.title,
+        trustScore: ts,
+        inputType: analysisResult.inputType,
+        createdAt: analysisResult.createdAt || new Date().toISOString(),
+        verdict: analysisResult.verdict,
+        bookmarked: false
+      };
+      
+      const updatedHistory = [newItem, ...localHistory.filter(h => h.title !== newItem.title)].slice(0, 100);
+      localStorage.setItem('analysis_history', JSON.stringify(updatedHistory));
+
       set({
         isAnalyzing: false,
-        currentAnalysis: analysisResult
+        currentAnalysis: analysisResult,
+        history: updatedHistory
       });
 
       return { success: true };

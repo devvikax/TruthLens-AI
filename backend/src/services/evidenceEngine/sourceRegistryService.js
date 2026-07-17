@@ -209,7 +209,7 @@ const lookupSource = async (sourceUrl = '', fallbackName = '') => {
       reliability = 95;
       transparency = 85;
     } else if (isTrustedMedia) {
-      category = 'Trusted Media';
+      category = 'National News';
       officialStatus = false;
       reliability = 92;
       transparency = 90;

@@ -80,6 +80,64 @@ const understandClaim = async (text) => {
   }
 };
 
+const extractSubject = (text, category) => {
+  const clean = text.trim();
+  const words = clean.split(/\s+/);
+  
+  const lower = clean.toLowerCase();
+  
+  // Death: Extract name before death markers
+  const deathMarkers = ['died', 'death', 'passed away', 'rip', 'na rahe', 'dead'];
+  for (const marker of deathMarkers) {
+    if (lower.includes(marker)) {
+      const idx = lower.indexOf(marker);
+      const namePart = clean.substring(0, idx).trim();
+      if (namePart.length > 2) {
+        return namePart;
+      }
+    }
+  }
+
+  // Retirement / Sports: Extract name before retired
+  const sportsMarkers = ['retired', 'retires', 'retirement', 'won', 'wins', 'lost', 'loses'];
+  for (const marker of sportsMarkers) {
+    if (lower.includes(marker)) {
+      const idx = lower.indexOf(marker);
+      const namePart = clean.substring(0, idx).trim();
+      if (namePart.length > 2) {
+        return namePart;
+      }
+    }
+  }
+
+  // Health: Extract main keyword (e.g. lemon, coffee, soda, cancer, vaccine)
+  if (category === 'Health / Medical') {
+    const keywords = ['lemon juice', 'lemon', 'coffee', 'baking soda', 'soda', 'cancer', 'covid-19', 'covid 19', 'covid', 'vaccine', 'diabetes'];
+    for (const kw of keywords) {
+      if (lower.includes(kw)) {
+        return kw.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+      }
+    }
+  }
+
+  // Government: Extract name before announcement markers
+  if (category === 'Government Announcement') {
+    const govMarkers = ['launched', 'launch', 'announced', 'announces', 'notification', 'scheme', 'yojana', 'mission'];
+    for (const marker of govMarkers) {
+      if (lower.includes(marker)) {
+        const idx = lower.indexOf(marker);
+        const namePart = clean.substring(0, idx).trim();
+        if (namePart.length > 2) {
+          return namePart;
+        }
+      }
+    }
+  }
+
+  // Fallback to first 2-3 words
+  return words.slice(0, Math.min(words.length, 3)).join(' ');
+};
+
 /**
  * Local fallback rule understander matching typical test cases and templates
  */
@@ -119,7 +177,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('amitabh') || lowerText.includes('bachchan') ? "Amitabh Bachchan has passed away." : text;
     claimType = "Death / Celebrity Death";
     categories = ["Death / Celebrity Death", "Social Media Rumor"];
-    subject = lowerText.includes('amitabh') || lowerText.includes('bachchan') ? "Amitabh Bachchan" : "Target Subject";
+    subject = lowerText.includes('amitabh') || lowerText.includes('bachchan') ? "Amitabh Bachchan" : extractSubject(text, claimType);
     predicate = "has passed away";
     event = "death";
     intent = "Verify whether the subject is deceased.";
@@ -130,7 +188,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('coffee') ? "World Health Organization declared coffee consumption dangerous." : text;
     claimType = "Health / Medical";
     categories = ["Health / Medical", "Social Media Rumor"];
-    subject = lowerText.includes('coffee') ? "World Health Organization" : "Medical Topic";
+    subject = lowerText.includes('coffee') ? "World Health Organization" : extractSubject(text, claimType);
     predicate = "declared dangerous";
     event = "health advisory";
     intent = "Verify the accuracy of this health statement.";
@@ -141,7 +199,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('gaganyaan') ? "ISRO has successfully launched the Gaganyaan mission." : text;
     claimType = "Government Announcement";
     categories = ["Government Announcement"];
-    subject = lowerText.includes('isro') ? "ISRO" : "Government Body";
+    subject = lowerText.includes('isro') ? "ISRO" : extractSubject(text, claimType);
     predicate = "successfully launched / declared";
     event = "official release";
     intent = "Verify the official government announcement.";
@@ -151,7 +209,7 @@ const getFallbackClaimMetadata = (text) => {
   else if (lowerText.includes('election') || lowerText.includes('vote') || lowerText.includes('commission') || lowerText.includes('modi') || lowerText.includes('rahul') || lowerText.includes('bjp') || lowerText.includes('congress') || lowerText.includes('poll')) {
     claimType = "Election / Politics";
     categories = ["Election / Politics"];
-    subject = "Election Commission or Political Candidate";
+    subject = extractSubject(text, claimType);
     predicate = "announced or contested";
     event = "election activity";
     intent = "Verify political or election declarations.";
@@ -162,7 +220,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('virat') ? "Virat Kohli has retired from international cricket." : lowerText.includes('fifa') ? "India won the FIFA Football World Cup." : text;
     claimType = "Sports";
     categories = ["Sports", "Social Media Rumor"];
-    subject = lowerText.includes('virat') ? "Virat Kohli" : lowerText.includes('fifa') ? "India National Football Team" : "Athlete";
+    subject = lowerText.includes('virat') ? "Virat Kohli" : lowerText.includes('fifa') ? "India National Football Team" : extractSubject(text, claimType);
     predicate = "retired / won";
     event = lowerText.includes('retired') ? "retirement" : "win";
     intent = "Verify this sports event, retirement, or match result.";
@@ -173,7 +231,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('aliens') ? "NASA has officially confirmed the existence of intelligent alien life." : text;
     claimType = "Space";
     categories = ["Space", "Science"];
-    subject = lowerText.includes('aliens') ? "NASA" : "Space Entity";
+    subject = lowerText.includes('aliens') ? "NASA" : extractSubject(text, claimType);
     predicate = "confirmed existence";
     event = "scientific findings";
     intent = "Verify space research agency statements.";
@@ -184,7 +242,7 @@ const getFallbackClaimMetadata = (text) => {
     normalizedClaim = lowerText.includes('petrol') ? "Petrol price has been reduced to 15 rupees per liter." : text;
     claimType = "Financial Scam";
     categories = ["Financial Scam", "Investment"];
-    subject = "Financial Asset or Scheme";
+    subject = extractSubject(text, claimType);
     predicate = "scam / high yield offering";
     event = "financial offer";
     intent = "Verify whether this financial scheme or yojana is fraudulent.";

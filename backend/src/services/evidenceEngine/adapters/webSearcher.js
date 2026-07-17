@@ -1,5 +1,123 @@
 const cheerio = require('cheerio');
 
+const unwrapBingUrl = (url) => {
+  if (url.includes('bing.com/ck/a?!') && url.includes('u=')) {
+    try {
+      const urlObj = new URL(url);
+      const uParam = urlObj.searchParams.get('u');
+      if (uParam) {
+        const base64Str = uParam.substring(2);
+        const padded = base64Str.padEnd(base64Str.length + (4 - base64Str.length % 4) % 4, '=');
+        const decoded = Buffer.from(padded, 'base64').toString('utf-8');
+        if (decoded.startsWith('http')) {
+          return decoded;
+        }
+      }
+    } catch (e) {
+      console.warn(`Failed to unwrap Bing redirect URL: ${url}`, e.message);
+    }
+  }
+  return url;
+};
+
+/**
+ * Bing Search Crawler (GET)
+ */
+const queryBing = async (query, limit = 5) => {
+  const url = `https://www.bing.com/search?q=${encodeURIComponent(query)}`;
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    },
+    signal: AbortSignal.timeout(6000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Bing Search HTTP Status ${response.status}`);
+  }
+
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  const results = [];
+
+  $('.b_algo').each((i, el) => {
+    const a = $(el).find('h2 a');
+    const title = a.text().trim();
+    let href = a.attr('href');
+    const snippet = $(el).find('.b_caption p, p').first().text().trim();
+    
+    if (href) {
+      href = unwrapBingUrl(href);
+    }
+
+    let source = 'Web Search';
+    try {
+      const parsed = new URL(href);
+      source = parsed.hostname.replace('www.', '');
+    } catch (e) {}
+
+    if (title && href && href.startsWith('http')) {
+      results.push({
+        title,
+        url: href,
+        snippet: snippet || title,
+        source,
+        category: 'Category F: Live Web Search',
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+  });
+
+  return results.slice(0, limit);
+};
+
+/**
+ * Yahoo Search Crawler (GET)
+ */
+const queryYahoo = async (query, limit = 5) => {
+  const url = `https://search.yahoo.com/search?p=${encodeURIComponent(query)}`;
+  const response = await fetch(url, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    },
+    signal: AbortSignal.timeout(6000)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Yahoo Search HTTP Status ${response.status}`);
+  }
+
+  const html = await response.text();
+  const $ = cheerio.load(html);
+  const results = [];
+
+  $('.algo').each((i, el) => {
+    const a = $(el).find('h3 a');
+    const title = a.text().trim();
+    const href = a.attr('href');
+    const snippet = $(el).find('.compText, p').first().text().trim();
+    
+    let source = 'Web Search';
+    try {
+      const parsed = new URL(href);
+      source = parsed.hostname.replace('www.', '');
+    } catch (e) {}
+
+    if (title && href && href.startsWith('http')) {
+      results.push({
+        title,
+        url: href,
+        snippet: snippet || title,
+        source,
+        category: 'Category F: Live Web Search',
+        date: new Date().toISOString().split('T')[0]
+      });
+    }
+  });
+
+  return results.slice(0, limit);
+};
+
 /**
  * DuckDuckGo Lite crawler (POST)
  */
@@ -19,6 +137,12 @@ const queryDdgLite = async (query, limit = 5) => {
   }
 
   const html = await response.text();
+  
+  // Return early if challenged or blocked
+  if (response.status === 202 || html.includes('captcha') || html.includes('challenge')) {
+    throw new Error(`DDG Lite served CAPTCHA/redirection challenge`);
+  }
+
   const $ = cheerio.load(html);
   const results = [];
 
@@ -75,6 +199,11 @@ const queryDdgHtml = async (query, limit = 5) => {
   }
 
   const html = await response.text();
+  
+  if (response.status === 202 || html.includes('captcha') || html.includes('challenge')) {
+    throw new Error(`DDG HTML served CAPTCHA/redirection challenge`);
+  }
+
   const $ = cheerio.load(html);
   const results = [];
 
@@ -83,7 +212,6 @@ const queryDdgHtml = async (query, limit = 5) => {
     const title = a.text().trim();
     const rawUrl = a.attr('href');
     
-    // DDG HTML results sometimes prefix href with redirection links, let's extract it
     let cleanUrl = rawUrl;
     if (rawUrl && rawUrl.includes('uddg=')) {
       try {
@@ -140,10 +268,12 @@ const queryWikipedia = async (query, limit = 3) => {
 
 /**
  * Web Search with automatic failover chain:
- * DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
+ * Bing -> Yahoo -> DuckDuckGo Lite -> DuckDuckGo HTML -> Wikipedia Search API
  */
 const searchWeb = async (query, limit = 5) => {
   const searchQueue = [
+    { name: 'Bing Search', fn: () => queryBing(query, limit) },
+    { name: 'Yahoo Search', fn: () => queryYahoo(query, limit) },
     { name: 'DuckDuckGo Lite', fn: () => queryDdgLite(query, limit) },
     { name: 'DuckDuckGo HTML', fn: () => queryDdgHtml(query, limit) },
     { name: 'Wikipedia Search API', fn: () => queryWikipedia(query, limit) }
@@ -155,7 +285,6 @@ const searchWeb = async (query, limit = 5) => {
       const results = await provider.fn();
       if (results && results.length > 0) {
         console.log(`- Web Search: Provider [${provider.name}] successfully returned ${results.length} candidate links.`);
-        // Mark which search provider was used
         return results.map(r => ({ ...r, searchProvider: provider.name }));
       }
       console.warn(`- Web Search: Provider [${provider.name}] returned 0 results. Trying next failover...`);

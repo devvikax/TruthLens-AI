@@ -105,25 +105,6 @@ export default function Navbar() {
             {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* Authenticated Controls vs Login Link */}
-          {isAuthenticated ? (
-            <div className="desktop-nav" style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)' }}>
-                👤 {user?.name || 'User'}
-              </span>
-              <button 
-                onClick={logoutUser} 
-                className="btn btn-secondary" 
-                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}
-              >
-                {language === 'en' ? 'Sign Out' : 'लॉग आउट'}
-              </button>
-            </div>
-          ) : (
-            <Link to="/auth" className="btn btn-primary desktop-nav" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>
-              {language === 'en' ? 'Sign In' : 'लॉग इन'}
-            </Link>
-          )}
 
           {/* Hamburger Icon */}
           <button 
@@ -170,29 +151,7 @@ export default function Navbar() {
               </Link>
             );
           })}
-          {isAuthenticated ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-sm)', width: '100%' }}>
-              <span style={{ fontSize: '0.88rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--text-primary)', textAlign: 'center', padding: '6px' }}>
-                👤 {user?.name || 'User'}
-              </span>
-              <button 
-                onClick={() => { logoutUser(); setMobileMenuOpen(false); }} 
-                className="btn btn-secondary" 
-                style={{ width: '100%' }}
-              >
-                {language === 'en' ? 'Sign Out' : 'लॉग आउट'}
-              </button>
-            </div>
-          ) : (
-            <Link 
-              to="/auth" 
-              onClick={() => setMobileMenuOpen(false)} 
-              className="btn btn-primary" 
-              style={{ width: '100%' }}
-            >
-              {language === 'en' ? 'Sign In' : 'लॉग इन'}
-            </Link>
-          )}
+
         </div>
       )}
 

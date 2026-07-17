@@ -6,9 +6,7 @@ import Home from './pages/Home';
 import Analysis from './pages/Analysis';
 import Results from './pages/Results';
 import About from './pages/About';
-import Auth from './pages/Auth';
 import History from './pages/History';
-import Profile from './pages/Profile';
 import DeveloperSandbox from './pages/DeveloperSandbox';
 import { ToastProvider } from './context/ToastContext';
 import { useAnalysisStore } from './store/analysisStore';
@@ -40,9 +38,7 @@ export default function App() {
               <Route path="/analyze" element={<Analysis />} />
               <Route path="/results" element={<Results />} />
               <Route path="/about" element={<About />} />
-              <Route path="/auth" element={<Auth />} />
               <Route path="/history" element={<History />} />
-              <Route path="/profile" element={<Profile />} />
               <Route path="/developer" element={<DeveloperSandbox />} />
             </Routes>
           </main>
