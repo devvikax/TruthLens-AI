@@ -189,6 +189,15 @@ const lookupSource = async (sourceUrl = '', fallbackName = '') => {
     const isGov = domain.endsWith('.gov') || domain.endsWith('.gov.in') || domain.endsWith('.nic.in') || domain.endsWith('.int');
     const isEdu = domain.endsWith('.edu') || domain.endsWith('.ac.in');
     
+    const TRUSTED_DOMAINS = [
+      'reuters.com', 'apnews.com', 'bbc.com', 'bbc.co.uk', 'afp.com',
+      'ndtv.com', 'thehindu.com', 'indianexpress.com', 'timesofindia.indiatimes.com',
+      'indiatoday.in', 'pib.gov.in', 'pib.nic.in', 'wikipedia.org', 'nasa.gov',
+      'isro.gov.in', 'who.int', 'cdc.gov', 'nih.gov', 'altnews.in', 'boomlive.in',
+      'factcheck.org', 'politifact.com', 'snopes.com', 'altnews.org'
+    ];
+    const isTrustedMedia = TRUSTED_DOMAINS.some(trusted => domain === trusted || domain.endsWith('.' + trusted));
+
     let category = 'Unknown Source';
     let officialStatus = false;
     let reliability = 50;
@@ -199,6 +208,11 @@ const lookupSource = async (sourceUrl = '', fallbackName = '') => {
       officialStatus = true;
       reliability = 95;
       transparency = 85;
+    } else if (isTrustedMedia) {
+      category = 'Trusted Media';
+      officialStatus = false;
+      reliability = 92;
+      transparency = 90;
     } else if (isEdu) {
       category = 'Academic';
       officialStatus = true;

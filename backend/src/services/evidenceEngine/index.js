@@ -32,6 +32,59 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
   const claimMetadata = await understandClaim(cleanedText);
   console.log(`- Semantic Claim Understood: "${claimMetadata.normalizedClaim}" [Category: ${claimMetadata.claimType}]`);
 
+  // early-exit if not a verifiable factual claim
+  if (!claimMetadata.isVerifiableFactualClaim) {
+    console.log(`- Input is NOT a verifiable factual claim: ${claimMetadata.nonVerifiableReason}`);
+    return {
+      title: 'Non-Factual Input Checked',
+      rawInput: cleanedText.substring(0, 5000),
+      inputType,
+      metrics: {
+        trustScore: 50,
+        sourceReputation: 0,
+        biasScore: 50,
+        claimVerification: 0,
+        emotionScore: 100
+      },
+      decomposedClaims: [],
+      entities: { persons: [], organizations: [], locations: [], events: [] },
+      evidenceCollected: [],
+      diversityProfile: { diversityScore: 0, counts: { domestic: 0, international: 0 } },
+      contradictionReport: {
+        conflictsDetected: false,
+        summary: [],
+        recommendation: "Factual verification was not performed."
+      },
+      timeline: [],
+      badges: [],
+      evidenceGraph: { nodes: [], edges: [] },
+      confidenceDetails: {
+        score: 0,
+        explanation: "Verification confidence is 0% because the input is not a verifiable factual claim.",
+        transparencyLogs: [claimMetadata.nonVerifiableReason],
+        components: { entity: 0, claim: 0, retrieval: 0, evidence: 0, verdict: 0 }
+      },
+      explainableNarrative: {
+        en: `This input cannot be verified because it is not a verifiable factual claim. ${claimMetadata.nonVerifiableReason || "Please enter an objective statement about historical, scientific, or news events."}`,
+        hi: `इस इनपुट को सत्यापित नहीं किया जा सकता क्योंकि यह एक तथ्य-जांच योग्य दावा नहीं है। ${claimMetadata.nonVerifiableReason || "कृपया ऐतिहासिक, वैज्ञानिक या समाचार घटनाओं के बारे में एक वस्तुनिष्ठ कथन दर्ज करें।"}`
+      },
+      metadata: {
+        claimCategory: "Non-Verifiable",
+        categories: ["Non-Verifiable"],
+        verificationStrategy: "None (Bypassed)",
+        prioritizedSources: "None",
+        pipelineSelected: "Bypassed (Non-Factual Input)",
+        debugLogs: {
+          generatedQueries: {},
+          rejectedSources: [],
+          claimMetadata,
+          resolvedEntity: {},
+          finalVerdict: "Not a Factual Claim"
+        }
+      }
+    };
+  }
+
   // Step 3: Entity Linking Engine
   const resolvedEntity = await linkEntity(claimMetadata.subject, claimMetadata.context);
   console.log(`- Entity Linked: [${resolvedEntity.resolvedEntity}] (Confidence: ${resolvedEntity.confidence * 100}%)`);
@@ -49,8 +102,8 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
   const queries = await generateQueries(claimMetadata);
   console.log(`- Bidirectional queries generated. FactCheck: "${queries.factCheck}", NegEvidence: "${queries.negativeEvidence}"`);
 
-  // Step 5: Bidirectional Retrieval & Relevance Validation (Returns both validated & rejected lists)
-  const { validated: validatedEvidence, rejected: rejectedEvidence } = await collectBidirectionalEvidence(claimMetadata, resolvedEntity, queries);
+  // Step 5: Bidirectional Retrieval & Relevance Validation (Returns both validated & rejected lists, and sandbox telemetry)
+  const { validated: validatedEvidence, rejected: rejectedEvidence, telemetry } = await collectBidirectionalEvidence(claimMetadata, resolvedEntity, queries);
 
   // Step 6: Source Registry Lookup & Primary Source Syndication Checks
   const scoredEvidencePromises = validatedEvidence.map(async (item) => {
@@ -92,10 +145,12 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
   const freshnessProfile = evaluateFreshness(scoredEvidence);
 
   // Step 9: Conflict Resolution Engine (discrepancy detection)
-  const conflictResolution = await resolveConflicts(decomposedClaims, scoredEvidence);
+  // Filter out Wikipedia from primary conflict and consensus evaluation so it is never used for news or verdict generation.
+  const primaryEvidence = scoredEvidence.filter(e => !e.isWikipedia);
+  const conflictResolution = await resolveConflicts(decomposedClaims, primaryEvidence);
 
   // Step 10: Consensus Evaluation per claim
-  const claimsWithConsensus = await calculateConsensus(decomposedClaims, scoredEvidence);
+  const claimsWithConsensus = await calculateConsensus(decomposedClaims, primaryEvidence);
 
   // Step 11: Manipulation & Sensationalism Detection
   const manipulationProfile = await detectManipulation(cleanedText);
@@ -140,7 +195,8 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
     independentSources: Math.min(scoredEvidence.filter(e => !e.isOfficial).length * 15, 100),
     officialConfirmation: officialCount > 0 ? 100 : 40,
     agreementConsensus: averageAgreementPercent,
-    manipulationControl
+    manipulationControl,
+    contradictingCount
   };
 
   const trustScore = calculateWeightedTrustScore(metrics, claimMetadata.claimType);
@@ -153,16 +209,17 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
     supportingCount,
     factCheckCount: factCheckCount,
     agreementPercent: averageAgreementPercent,
-    evidenceStrength: averageEvidenceQuality
+    evidenceStrength: averageEvidenceQuality,
+    evidenceCount: primaryEvidence.length
   });
 
-  // Deduplication for confidence calculations
-  const uniqueReporters = new Set(scoredEvidence.map(e => e.primarySource ? e.primarySource.deduplicationKey : e.url));
+  // Deduplication for confidence calculations (excluding Wikipedia background context)
+  const uniqueReporters = new Set(primaryEvidence.map(e => e.primarySource ? e.primarySource.deduplicationKey : e.url));
   const deduplicatedCount = uniqueReporters.size;
 
   // Step 14: Multi-Stage Confidence Scoring (Step 5)
   const confidenceDetails = calculateConfidence({
-    evidenceCount: scoredEvidence.length,
+    evidenceCount: primaryEvidence.length,
     deduplicatedCount,
     averageSourceReliability,
     agreementPercent: averageAgreementPercent,
@@ -222,6 +279,7 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
     supportingCount,
     contradictingCount,
     evidenceList: scoredEvidence.slice(0, 5),
+    rejectedList: rejectedEvidence.slice(0, 5),
     ragContext // pass context to prompt builder
   });
 
@@ -297,7 +355,17 @@ const executePipelineSteps = async (inputType, cleanedText, rawInput) => {
         rejectedSources: rejectedEvidence,
         claimMetadata,
         resolvedEntity,
-        finalVerdict
+        finalVerdict,
+        providerUsed: telemetry ? telemetry.providerUsed : [],
+        candidateUrls: telemetry ? telemetry.candidateUrls : [],
+        rejectedUrls: telemetry ? telemetry.rejectedUrls : [],
+        rejectedReasons: telemetry ? telemetry.rejectedReasons : [],
+        extractionStatus: telemetry ? telemetry.extractionStatus : [],
+        entityMatch: telemetry ? telemetry.entityMatch : [],
+        claimMatch: telemetry ? telemetry.claimMatch : [],
+        evidenceScore: telemetry ? telemetry.evidenceScore : [],
+        trustScore: trustScore,
+        finalRanking: validatedEvidence.map((e, idx) => ({ rank: idx + 1, title: e.title, url: e.url, score: e.relevanceScore }))
       }
     }
   };

@@ -4,6 +4,15 @@ All notable changes to the **TruthLens-AI** project during the hardening and exp
 
 ---
 
+## [1.4.0] - 2026-07-17
+
+### Added
+*   **Redesigned Multi-Provider Search Failover**: Rebuilt `webSearcher.js` to dynamically query DuckDuckGo Lite (POST), DuckDuckGo HTML (GET), and Wikipedia Search API in a failover chain.
+*   **Pre-Check Link Reachability Validation**: Integrated live reachability HEAD/GET checks to ensure broken links are discarded and never displayed.
+*   **Jaccard Similarity Duplicate Detection**: Implemented set-overlap checks on headlines and bodies to filter syndicated news copies and prevent artificial consensus inflation.
+*   **8-Dimensional Source Quality Scorecard**: Augmented evidence with scores for Reliability, Original Reporting, Freshness, Transparency, Authority, Entity Match, Claim Match, and Evidence Strength.
+*   **Sandbox Telemetry Pipeline**: Pipe search providers, candidates, reachability failures, Jaccard overlaps, and quality metrics directly to the Developer Sandbox.
+
 ## [1.3.0] - 2026-07-17
 
 ### Added

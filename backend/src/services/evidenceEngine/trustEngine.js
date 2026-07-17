@@ -93,14 +93,21 @@ const getCategoryOptimizedWeights = (claimType = '') => {
 const calculateWeightedTrustScore = (metrics, claimType = '') => {
   const weights = getCategoryOptimizedWeights(claimType);
 
-  const eq = metrics.evidenceQuality || 60;
-  const sr = metrics.sourceReliability || 60;
-  const ind = metrics.independentSources || 60;
-  const off = metrics.officialConfirmation || 40;
-  const ac = metrics.agreementConsensus || 50;
-  const mc = metrics.manipulationControl || 80;
+  // If there are no sources at all, return 50 (neutral/baseline)
+  if (metrics.evidenceQuality === 0 && metrics.sourceReliability === 0) {
+    return 50;
+  }
 
-  const trustScore = Math.round(
+  const eq = metrics.evidenceQuality !== undefined ? metrics.evidenceQuality : 50;
+  const sr = metrics.sourceReliability !== undefined ? metrics.sourceReliability : 50;
+  
+  // Calculate independent source score and official confirmations dynamically
+  const ind = metrics.independentSources !== undefined ? metrics.independentSources : 50;
+  const off = metrics.officialConfirmation !== undefined ? metrics.officialConfirmation : 40;
+  const ac = metrics.agreementConsensus !== undefined ? metrics.agreementConsensus : 50;
+  const mc = metrics.manipulationControl !== undefined ? metrics.manipulationControl : 80;
+
+  let trustScore = Math.round(
     eq * weights.evidenceQuality +
     sr * weights.sourceReliability +
     ind * weights.independentSources +
@@ -108,6 +115,19 @@ const calculateWeightedTrustScore = (metrics, claimType = '') => {
     ac * weights.agreementConsensus +
     mc * weights.manipulationControl
   );
+
+  // Boost trust score if consensus is high and there are no contradictions
+  if (ac >= 80 && (!metrics.contradictingCount || metrics.contradictingCount === 0)) {
+    // If we have verified trusted media sources, give it a high score
+    if (sr >= 75) {
+      trustScore = Math.max(trustScore, 85);
+    }
+  }
+
+  // Penalize trust score if contradiction is high or agreement is very low
+  if (ac <= 20 || (metrics.contradictingCount >= 2 && ac < 30)) {
+    trustScore = Math.min(trustScore, 25);
+  }
 
   return Math.max(0, Math.min(100, trustScore));
 };

@@ -113,19 +113,21 @@ The verification strategy automatically adapts based on the detected claim categ
 *   **Space / Science**: Prioritizes space agencies (NASA, ISRO) and Nature/Science journals.
 *   **Financial Scam**: Prioritizes regulatory warning lists (RBI, SEBI, SEC) and official yojana checkers.
 
-### 7.4 Query Intelligence & Bidirectional Retrieval
-*   **Multi-Query Generator**: Generates 6 category-specific queries targeting optimal platforms (e.g. searching obituaries for death claims, PubMed for medical claims).
-*   **Bidirectional Crawl**: Searches both supporting and contradicting directions in parallel to collect all viewpoints before verdict calculations.
+### 7.4 Query Intelligence & Multi-Provider Failover Search
+*   **Multi-Query Generator**: Generates 6 category-specific queries targeting optimal platforms.
+*   **Failover Search Chain**: Searches in a sequential queue: DuckDuckGo Lite (POST), DuckDuckGo HTML (GET), and Wikipedia Search API. If a provider fails, the engine automatically catches the exception and queries the next provider.
+*   **Relevance Checking**: Filters out search snippets and treats them strictly as discovery pathways.
 
-### 7.5 Evidence Validator & False Positive Reduction
-*   Every retrieved article is analyzed against the claim metadata and canonical entity.
-*   **Relevance Scoring**: Computes a 100-point score based on Entity Match (30%), Claim/Event Similarity (30%), Fact-check Context (15%), and Source Credibility (20%). Discards sources scoring below 50.
-*   **False Positive Reduction**: Rejects sources if they discuss a different event, similar keywords in a different context, or reference a different person.
-*   **Selection Explanation**: Attaches a detailed note on why specific sources were prioritized (e.g. *"WHO and peer-reviewed journals were prioritized over general news websites for this Health claim."*).
+### 7.5 Pre-Check Link reachability & Clean Content Extraction
+*   **Reachability Pre-Check**: Checks reachability via HEAD/GET requests with a 4-second timeout. Discards broken links (404/500/unreachable) before extraction.
+*   **Boilerplate Cleanup**: Parses pages via cheerio and extracts headline, publisher, date, author, canonical URL, and main body text while removing navigation, comments, ads, and widgets.
+*   **nlp Validation**: Submits text to the AI task engine to verify that it discusses the canonical entity and claim. Irrelevant, keyword-only, or event-mismatched pages are rejected.
 
-### 7.6 Multi-Stage Confidence & Grounding Safeguards
-*   **Multi-Stage Confidence**: Replaces single overall scores with 6 distinct validation gates: Entity, Claim, Retrieval, Evidence, Verdict, and Overall Confidence scores.
-*   **RAG Context Grounding**: Compiles an audited Markdown fact dossier representing the **sole** allowed source of knowledge for the LLM during narrative generation.
+### 7.6 Syndication Duplicate Detection & 8-Dimensional Source Scorecard
+*   **Duplicate Detection**: Computes Jaccard word-set similarities on scraped content. Republished syndications (e.g. AP/Reuters wire copies) matching existing articles with Jaccard similarity $> 0.65$ are marked as duplicates and filtered.
+*   **8-Dimensional Source Scorecard**: Assigns individual scores for: Reliability, Original Reporting, Freshness, Transparency, Authority, Entity Match, Claim Match, and Evidence Strength.
+*   **Developer Sandbox Telemetry**: Pipes all candidates, search providers, reachability rejections, Jaccard similarity overlaps, and extraction logs to the developer dashboard.
+
 *   **Freshness Decay & Conflict Resolution**: Applies date-based freshness multipliers and reduces confidence if contradicting sources are detected.
 
 ---

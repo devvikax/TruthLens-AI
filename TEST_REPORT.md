@@ -36,9 +36,11 @@ This document outlines the final verification logs, test parameters, and failure
 *   **Case 14: Sports rumors**: Verified that federations (BCCI, FIFA) and team rosters are checked. (Pass)
 *   **Case 15: False Positive check**: Verified that mismatched events (e.g. politics in space launch, Dhoni in Kohli search) are rejected. (Pass)
 
-### 2.4 Developer Sandbox Telemetry
+### 2.4 Developer Sandbox & Retrieval Telemetry
 *   **Case 16: AsyncLocalStorage tracing**: Verified that LLM prompt/JSON traces are captured dynamically per execution. (Pass)
 *   **Case 17: Discarded source logger**: Verified that rejected sources (due to low relevance or blog rules) are tracked with reasons. (Pass)
+*   **Case 18: Multi-Provider Search Failover**: Verified that when DuckDuckGo Lite is blocked, the engine successfully loops and gets results from DuckDuckGo HTML and Wikipedia Search. (Pass)
+*   **Case 19: Pre-Check URL reachability & Duplicate Check**: Tested that broken links (404/500/timeout) are automatically dropped, and Jaccard-duplicated republishers are grouped and discarded. (Pass)
 
 ---
 

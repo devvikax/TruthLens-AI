@@ -19,6 +19,7 @@ Traditional fake-news detectors suffer from:
 *   **Dynamic Verification Strategy Selector**: The engine automatically classifies claims into 19 categories (e.g. Death, Medical, Space, etc.) and routes adapters accordingly, dynamically adjusting source trust weights and filtering false positives.
 *   **Developer Telemetry Console**: Access a hidden, forensic-grade debugging sandbox at `/developer` to inspect original inputs, normalized statements, queries, discarded sources, and raw LLM traces.
 *   **Decoupled Multi-Layer Retrieval**: Parallel semantic, keyword, and entity search adapters query fact-check registries, academic repositories, and live search engines concurrently.
+*   **Parallel Full-Text Article Extraction**: Instead of validating search snippets (which can easily lead to false consensus), the retrieval engine crawls candidate web URLs in parallel, extracts clean text content (filtering ads, boilerplate, and headers), and validates it using semantic context and entity checks.
 *   **Source Trust Registry (STR)**: A persistent DB-backed registry mapping domain categorization and credibility weighting factors.
 *   **Multi-Stage Confidence DNA**: Confidence is resolved across 5 component validation gates (Entity, Claim, Retrieval, Evidence, and Verdict) using the formula:
     $$\text{Overall} = \text{Entity} \cdot 15\% + \text{Claim} \cdot 15\% + \text{Retrieval} \cdot 20\% + \text{Evidence} \cdot 25\% + \text{Verdict} \cdot 25\%$$

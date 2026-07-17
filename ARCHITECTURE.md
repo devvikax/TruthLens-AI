@@ -80,26 +80,29 @@ $$\text{Confidence} = C_{\text{Quantity}} \cdot 0.20 + C_{\text{Quality}} \cdot 
 *   Checks for ambiguity: if link confidence is low ($<60\%$), it flags `requiresClarification: true` along with candidate suggestions.
 *   HTTP 409 intercepts trigger a modal select panel on the frontend (`Analysis.jsx`) allowing users to choose the target entity.
 
-### 4.3 Custom Search Generator (`queryGenerator.js`)
-*   Dynamically builds 6 distinct queries targeted for the specific claim category (e.g. PubMed for medical, obituaries/spokesperson statements for celebrity deaths).
+### 4.3 Redesigned Multi-Provider Search Failover (`webSearcher.js`)
+*   Implements a search provider queue: DuckDuckGo Lite (POST), DuckDuckGo HTML (GET), and Wikipedia Search API.
+*   If a search provider is blocked, times out, or returns empty results, the engine automatically catches the error and failovers to the next provider in the queue, preventing search system unavailability.
 
-### 4.4 Verification Strategy Selector (`evidenceCollector.js`)
-*   Automatically shifts query routing matrices:
-    *   *Death claims* route to fact-checks, obituaries, and official wires (strictly ignoring blogs).
-    *   *Health claims* route to PubMed, WHO guidelines, and CDC registries.
-    *   *Government claims* route to PIB fact checks and government domains (.gov).
-    *   *Space claims* route to NASA, ISRO, ESA, and Nature/Science journals.
-*   Maps selection explanations to `whyItMatters` for UI transparency.
+### 4.4 Pre-Check Link Validation & Content Extraction (`evidenceCollector.js`)
+*   **Reachability Check**: Before any candidate URL is processed, the system executes a rapid HEAD request (falling back to a GET request with a range limit `0-1024` if HEAD is blocked by CDNs) with a 4-second timeout. Unreachable, 404, or 500 links are discarded.
+*   **cheerio Full-Page Scraping**: Retrieves full page HTML and strips boilerplate (navigation, ads, comments, cookie banners, related posts, footers).
+*   **nlp Grounded Extraction**: Submits the clean page text to the AI task orchestrator to pull publisher, date, author, canonical URL, and evidence summaries without hallucination.
 
-### 4.5 Evidence Validator & False Positive Reduction (`evidenceValidator.js`)
-*   Evaluates every source against a 100-point metric: Entity Match (30%), Claim/Event Similarity (30%), Fact-check Context (15%), and Source Credibility (20%). Discards items scoring below 50.
-*   **False Positive Reduction**: Rejects sources if they mention the entity but discuss a different event, mention the event but reference a different person, or match similar keywords in a different context.
+### 4.5 Duplicate & Syndication Detection (`evidenceCollector.js`)
+*   Computes Jaccard word-set similarities between headlines and extracted article body text.
+*   Republished wire copies (e.g. AP/Reuters syndications) matching existing articles with Jaccard similarity $> 0.65$ are marked as duplicates and discarded to prevent false consensus inflation.
 
-### 4.6 Dynamic Source Prioritization (`trustEngine.js`)
-*   Calculates weighted trust scores using dynamic weights tailored to the claim category:
-    *   *Health / Medical*: Official confirmation (WHO/CDC) weight elevated to 30%, independent news volume weight reduced to 5% to combat blog spam.
-    *   *Government / Election*: Gazette and official PIB confirmation weight elevated to 35%.
-    *   *Death*: Source consensus weight elevated to 15% to detect hoaxes early.
+### 4.6 8-Dimensional Source Quality Scorecard (`evidenceCollector.js`)
+*   Every validated source is assigned scores across 8 dimensions:
+    1.  *Reliability*: General publisher reputation rating.
+    2.  *Original Reporting*: Verified primary reporting status vs syndicated republishing.
+    3.  *Freshness*: Date-age penalty score.
+    4.  *Transparency*: Sourced metadata completeness.
+    5.  *Authority*: Domain credentials weighting (gov/edu vs news vs public encyclopedias).
+    6.  *Entity Match*: Semantic subject alignment rating.
+    7.  *Claim Match*: Factual statement alignment rating.
+    8.  *Evidence Strength*: Solidity of extracted points.
 
 ### 4.7 Multi-Stage Confidence Engine (`confidenceCalculator.js`)
 *   Replaces single overall scores with 5 component-level confidence values:

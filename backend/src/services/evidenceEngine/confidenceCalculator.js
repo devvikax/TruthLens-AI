@@ -2,6 +2,7 @@
  * Step 5: Multi-Stage Confidence Calculator
  * Calculates individual confidence scores across 6 distinct validation gates,
  * outputting mathematical audit logs for full pipeline transparency.
+ * Calculates confidence dynamically from evidence quantity, reliability, consensus, and freshness.
  */
 
 /**
@@ -21,11 +22,31 @@ const calculateConfidence = (data) => {
     averageRelevanceScore = 75   // 0 - 100 average of validated evidence
   } = data;
 
-  // 1. Entity Confidence: mapped from the Entity Linker
   const entityConfidence = Math.round(entityLinkConfidence * 100);
-
-  // 2. Claim Confidence: mapped from the Claim Understander
   const claimConfidence = Math.round(claimParseConfidence * 100);
+
+  // If no evidence is found, cap overall confidence at the minimum safe value (5%)
+  if (evidenceCount === 0 || deduplicatedCount === 0) {
+    return {
+      score: 5,
+      explanation: "Verification confidence is 5% because no reliable evidence was retrieved.",
+      transparencyLogs: [
+        `- Stage 1: Entity Confidence: ${entityConfidence}% (based on context-aware entity linking).`,
+        `- Stage 2: Claim Confidence: ${claimConfidence}% (based on semantic predicate parsing).`,
+        `- Stage 3: Retrieval Confidence: 0% (No sources found).`,
+        `- Stage 4: Evidence Confidence: 0% (No sources to evaluate).`,
+        `- Stage 5: Verdict Confidence: 0% (No consensus possible).`,
+        `- Stage 6: Overall Capped Confidence: 5% (Zero evidence gathered).`
+      ],
+      components: {
+        entity: entityConfidence,
+        claim: claimConfidence,
+        retrieval: 0,
+        evidence: 0,
+        verdict: 0
+      }
+    };
+  }
 
   // 3. Retrieval Confidence: mapped from crawl volume and diversity
   const quantityScore = Math.min(deduplicatedCount * 25, 100);
@@ -47,16 +68,22 @@ const calculateConfidence = (data) => {
     verdictConfidence * 0.25
   );
 
-  const score = Math.max(5, Math.min(100, overallConfidence));
+  let score = Math.max(5, Math.min(100, overallConfidence));
 
-  // Compile detailed mathematical transparency logs
   const logs = [];
   logs.push(`- Stage 1: Entity Confidence: ${entityConfidence}% (based on context-aware entity linking).`);
   logs.push(`- Stage 2: Claim Confidence: ${claimConfidence}% (based on semantic predicate parsing).`);
   logs.push(`- Stage 3: Retrieval Confidence: ${retrievalConfidence}% (based on query coverage and domain diversity).`);
   logs.push(`- Stage 4: Evidence Confidence: ${evidenceConfidence}% (average source reliability of ${Math.round(averageSourceReliability)}% and relevance score of ${Math.round(averageRelevanceScore)}%).`);
   logs.push(`- Stage 5: Verdict Confidence: ${verdictConfidence}% (degree of agreement/consensus among sources).`);
-  logs.push(`- Stage 6: Overall Synthesized Confidence: ${score}% (Formula: Entity * 0.15 + Claim * 0.15 + Retrieval * 0.20 + Evidence * 0.25 + Verdict * 0.25).`);
+
+  // Cap confidence at 50% if there is only 1 source to satisfy Rule 5 (at least 2 independent sources needed for strong verification)
+  if (deduplicatedCount === 1) {
+    score = Math.min(score, 50);
+    logs.push(`- Stage 6: Capped overall confidence at 50% because only 1 independent source was retrieved (requires at least 2 for full verification).`);
+  } else {
+    logs.push(`- Stage 6: Overall Synthesized Confidence: ${score}% (Formula: Entity * 0.15 + Claim * 0.15 + Retrieval * 0.20 + Evidence * 0.25 + Verdict * 0.25).`);
+  }
 
   return {
     score,

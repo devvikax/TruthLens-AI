@@ -63,3 +63,12 @@
 - [x] Rebuild the analysis progress loader screen to feature a digital forensic scanning hologram target with live timestamped monospace logs.
 - [x] Create a custom high-performance canvas background in `Home.jsx` rendering interactive antigravity upward-floating particles, baseline grids, and mouse repulsion webs.
 - [x] Verify successful compilation with production build script.
+
+### Phase 18: Redesigned Evidence Retrieval & Verification Layer (100% Completed)
+- [x] Rebuilt search adapter (`webSearcher.js`) to support dynamic query failovers: DDG Lite -> DDG HTML -> Wikipedia Search API.
+- [x] Implemented pre-check link validation checking reachability via rapid HEAD/GET requests with a 4-second timeout.
+- [x] Implemented cheerio cleanup of article bodies (discarding ads, comments, cookie banners, navigation).
+- [x] Deployed Jaccard similarity word-set overlap duplicate checking to detect syndication clones and prevent artificial consensus.
+- [x] Implemented 8-dimensional source quality scorecard (Reliability, Original Reporting, Freshness, Transparency, Authority, Entity Match, Claim Match, Evidence Strength).
+- [x] Piped search providers, reachability rejections, Jaccard scores, and validation details directly to the Developer Sandbox Telemetry console.
+- [x] Verified diagnostic tests pass successfully on all test targets.

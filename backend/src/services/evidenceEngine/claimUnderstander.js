@@ -2,7 +2,8 @@ const { orchestrateAiTask } = require('../aiOrchestrator');
 
 /**
  * Step 2: Claim Understanding Engine
- * Analyzes the user input to extract semantic predicates and intent before searching
+ * Analyzes the user input to extract semantic predicates and intent before searching.
+ * Also determines if the input is a factual, verifiable claim.
  * @param {string} text - Cleaned input text
  * @returns {Promise<Object>} Analyzed claim metadata
  */
@@ -33,6 +34,16 @@ const understandClaim = async (text) => {
     - International Affairs
     - Social Media Rumor
 
+    Determine if the assertion is a factual, verifiable claim.
+    A verifiable factual claim:
+    - Is an objective assertion about real-world events, entities, science, history, or announcements that can be proven true or false.
+    - Examples: "Virat Kohli retired", "ISRO launched Gaganyaan", "Amitabh Bachchan died", "World Health Organization declared coffee dangerous."
+    
+    It is NOT a verifiable factual claim if it is:
+    - A personal opinion, preference, or subjective statement (e.g., "I like pizza", "Verilens-ai is awesome").
+    - A greeting or standard conversational text (e.g., "Hello", "Good morning", "Hey").
+    - Random words, gibberish, questions, or meaningless text.
+
     Respond strictly with a JSON object in this format:
     {
       "normalizedClaim": "A clear, complete, self-contained statement in English (resolving pronouns, Hindi phrases, and abbreviations to their canonical equivalents).",
@@ -44,9 +55,11 @@ const understandClaim = async (text) => {
       "event": "The specific event mentioned (e.g., death, retirement, launch, win, disaster), if any.",
       "time": "Relative or absolute time mentioned (e.g., 'now', '2026-07', 'none').",
       "location": "Location mentioned (e.g., 'India', 'NASA headquarters', 'none').",
-      "negation": false, // true if the sentence asserts something did NOT happen
-      "intent": "1-sentence description of what needs to be verified (e.g., 'Verify if Amitabh Bachchan is deceased').",
-      "context": "Any underlying context or subtext implied."
+      "negation": false,
+      "intent": "1-sentence description of what needs to be verified.",
+      "context": "Any underlying context or subtext implied.",
+      "isVerifiableFactualClaim": true, // Boolean: True ONLY if it is an objective, verifiable factual claim. False for opinions, greetings, questions, or gibberish.
+      "nonVerifiableReason": "" // Explanation of why it cannot be fact-checked (e.g. 'The input is a personal greeting and contains no checkable facts.')
     }
   `;
 
@@ -55,6 +68,10 @@ const understandClaim = async (text) => {
     const parsed = JSON.parse(responseText);
     if (!parsed.categories || parsed.categories.length === 0) {
       parsed.categories = [parsed.claimType || 'Social Media Rumor'];
+    }
+    // Safety check on response fields
+    if (parsed.isVerifiableFactualClaim === undefined) {
+      parsed.isVerifiableFactualClaim = true;
     }
     return parsed;
   } catch (err) {
@@ -67,7 +84,7 @@ const understandClaim = async (text) => {
  * Local fallback rule understander matching typical test cases and templates
  */
 const getFallbackClaimMetadata = (text) => {
-  const lowerText = text.toLowerCase();
+  const lowerText = text.toLowerCase().trim();
   
   let normalizedClaim = text;
   let claimType = 'Social Media Rumor';
@@ -77,6 +94,25 @@ const getFallbackClaimMetadata = (text) => {
   let object = 'none';
   let event = 'none';
   let intent = `Verify the claims in: "${text}"`;
+  
+  let isVerifiableFactualClaim = true;
+  let nonVerifiableReason = "";
+
+  // Greetings checking
+  const greetings = ['hello', 'hi', 'hey', 'good morning', 'good afternoon', 'good evening', 'good night', 'thanks', 'thank you', 'how are you', 'howdy', 'welcome'];
+  // Opinions checking
+  const personalOpinions = ['i like', 'i love', 'i hate', 'my favorite', 'i think', 'i believe', 'in my opinion', 'feel like'];
+
+  if (greetings.some(g => lowerText === g || lowerText.startsWith(g + ' ') || lowerText.startsWith(g + ','))) {
+    isVerifiableFactualClaim = false;
+    nonVerifiableReason = "The input appears to be a standard greeting or conversational text and does not contain a checkable factual claim.";
+  } else if (personalOpinions.some(op => lowerText.includes(op))) {
+    isVerifiableFactualClaim = false;
+    nonVerifiableReason = "The input is a subjective personal opinion or preference which cannot be verified with factual data.";
+  } else if (text.split(/\s+/).length < 2 && !lowerText.includes('amitabh') && !lowerText.includes('virat') && !lowerText.includes('isro')) {
+    isVerifiableFactualClaim = false;
+    nonVerifiableReason = "The input is too short or represents random words without a checkable subject-predicate statement.";
+  }
 
   // 1. Death / Celebrity Death
   if (lowerText.includes('amitabh') || lowerText.includes('bachchan') || lowerText.includes('died') || lowerText.includes('death') || lowerText.includes('na rahe') || lowerText.includes('passed away') || lowerText.includes('rip')) {
@@ -87,6 +123,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "has passed away";
     event = "death";
     intent = "Verify whether the subject is deceased.";
+    isVerifiableFactualClaim = true; // explicitly force true for verified targets
   }
   // 2. Health / Medical
   else if ((lowerText.includes('who') && (lowerText.includes('coffee') || lowerText.includes('dangerous'))) || lowerText.includes('lemon') || lowerText.includes('soda') || lowerText.includes('cancer') || lowerText.includes('medical') || lowerText.includes('health') || lowerText.includes('covid') || lowerText.includes('vaccine')) {
@@ -97,6 +134,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "declared dangerous";
     event = "health advisory";
     intent = "Verify the accuracy of this health statement.";
+    isVerifiableFactualClaim = true;
   }
   // 3. Government Announcement
   else if ((lowerText.includes('isro') && lowerText.includes('gaganyaan')) || lowerText.includes('pib') || lowerText.includes('notification') || lowerText.includes('announcement') || lowerText.includes('government') || lowerText.includes('gazette') || lowerText.includes('ministry')) {
@@ -107,6 +145,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "successfully launched / declared";
     event = "official release";
     intent = "Verify the official government announcement.";
+    isVerifiableFactualClaim = true;
   }
   // 4. Election / Politics
   else if (lowerText.includes('election') || lowerText.includes('vote') || lowerText.includes('commission') || lowerText.includes('modi') || lowerText.includes('rahul') || lowerText.includes('bjp') || lowerText.includes('congress') || lowerText.includes('poll')) {
@@ -116,6 +155,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "announced or contested";
     event = "election activity";
     intent = "Verify political or election declarations.";
+    isVerifiableFactualClaim = true;
   }
   // 5. Sports
   else if (lowerText.includes('virat') || lowerText.includes('kohli') || lowerText.includes('retired') || lowerText.includes('fifa') || lowerText.includes('cricket') || lowerText.includes('football') || lowerText.includes('championship')) {
@@ -126,6 +166,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "retired / won";
     event = lowerText.includes('retired') ? "retirement" : "win";
     intent = "Verify this sports event, retirement, or match result.";
+    isVerifiableFactualClaim = true;
   }
   // 6. Space / Science
   else if (lowerText.includes('nasa') || lowerText.includes('aliens') || lowerText.includes('space') || lowerText.includes('mars') || lowerText.includes('moon') || lowerText.includes('isro') || lowerText.includes('galaxy') || lowerText.includes('universe')) {
@@ -136,6 +177,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "confirmed existence";
     event = "scientific findings";
     intent = "Verify space research agency statements.";
+    isVerifiableFactualClaim = true;
   }
   // 7. Financial Scam / Investment
   else if (lowerText.includes('petrol') || lowerText.includes('rupees') || lowerText.includes('free') || lowerText.includes('scam') || lowerText.includes('investment') || lowerText.includes('recharge') || lowerText.includes('yojana') || lowerText.includes('rbi') || lowerText.includes('sebi')) {
@@ -146,33 +188,7 @@ const getFallbackClaimMetadata = (text) => {
     predicate = "scam / high yield offering";
     event = "financial offer";
     intent = "Verify whether this financial scheme or yojana is fraudulent.";
-  }
-  // 8. Disaster
-  else if (lowerText.includes('earthquake') || lowerText.includes('flood') || lowerText.includes('tsunami') || lowerText.includes('hurricane') || lowerText.includes('cyclone') || lowerText.includes('landslide')) {
-    claimType = "Disaster";
-    categories = ["Disaster"];
-    subject = "Natural Event / Region";
-    predicate = "struck by disaster";
-    event = "natural disaster";
-    intent = "Verify emergency alerts or disaster claims.";
-  }
-  // 9. International Affairs
-  else if (lowerText.includes('war') || lowerText.includes('treaty') || lowerText.includes('un ') || lowerText.includes('sanctions') || lowerText.includes('border') || lowerText.includes('conflict')) {
-    claimType = "International Affairs";
-    categories = ["International Affairs"];
-    subject = "Nations / UN";
-    predicate = "conflict / agreement";
-    event = "diplomatic action";
-    intent = "Verify diplomatic or warfare claims.";
-  }
-  // 10. Technology
-  else if (lowerText.includes('ai') || lowerText.includes('artificial intelligence') || lowerText.includes('software') || lowerText.includes('os update') || lowerText.includes('battery swell')) {
-    claimType = "Technology";
-    categories = ["Technology"];
-    subject = "Tech Brand / Product";
-    predicate = "update or release issue";
-    event = "product release";
-    intent = "Verify tech safety warnings or announcements.";
+    isVerifiableFactualClaim = true;
   }
 
   return {
@@ -187,6 +203,8 @@ const getFallbackClaimMetadata = (text) => {
     location: lowerText.includes('india') || lowerText.includes('bharat') ? 'India' : 'none',
     negation: false,
     intent,
+    isVerifiableFactualClaim,
+    nonVerifiableReason,
     context: `Local rule matched for fallback: ${claimType}`
   };
 };
