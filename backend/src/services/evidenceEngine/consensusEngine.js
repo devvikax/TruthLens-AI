@@ -42,8 +42,33 @@ const calculateConsensus = async (claims, evidenceList) => {
   `;
 
   try {
-    const responseText = await orchestrateAiTask('consensusEvaluation', prompt, true);
-    return JSON.parse(responseText);
+    let responseText = await orchestrateAiTask('consensusEvaluation', prompt, true);
+    
+    // Clean potential markdown fences
+    responseText = responseText.replace(/```json/gi, '').replace(/```/g, '').trim();
+    
+    const startIdx = responseText.indexOf('[');
+    const endIdx = responseText.lastIndexOf(']');
+    
+    if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+      const arrayJson = responseText.substring(startIdx, endIdx + 1);
+      const parsed = JSON.parse(arrayJson);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
+    }
+    
+    const parsed = JSON.parse(responseText);
+    if (Array.isArray(parsed)) {
+      return parsed;
+    }
+    for (const key in parsed) {
+      if (Array.isArray(parsed[key])) {
+        return parsed[key];
+      }
+    }
+    
+    throw new Error('Parsed JSON is not an array and contains no array property');
   } catch (err) {
     console.error(`AI Orchestrator consensus calculation failed: ${err.message}. Returning fallbacks.`);
     return getFallbackConsensus(claims, evidenceList);

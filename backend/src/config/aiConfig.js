@@ -9,16 +9,17 @@ module.exports = {
   routing: {
     speechToText: ['mock'], // whisper placeholder
     ocr: ['tesseract'],
-    claimDecomposition: ['openrouter', 'gemini'],
-    entityExtraction: ['openrouter', 'gemini'],
-    contradictionAnalysis: ['openrouter', 'gemini'],
-    consensusEvaluation: ['openrouter', 'gemini'],
-    manipulationDetection: ['openrouter', 'gemini'],
-    explainableNarrative: ['openrouter', 'gemini']
+    claimDecomposition: ['groq', 'openrouter', 'gemini'],
+    entityExtraction: ['groq', 'openrouter', 'gemini'],
+    contradictionAnalysis: ['groq', 'openrouter', 'gemini'],
+    consensusEvaluation: ['groq', 'openrouter', 'gemini'],
+    manipulationDetection: ['groq', 'openrouter', 'gemini'],
+    explainableNarrative: ['groq', 'openrouter', 'gemini']
   },
 
   // Connection & Timeout specifications (in milliseconds)
   timeouts: {
+    groq: 8000,
     openrouter: 8000,
     gemini: 8000,
     tesseract: 20000,

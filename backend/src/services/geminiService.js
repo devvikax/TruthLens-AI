@@ -26,7 +26,49 @@ const isOpenRouterConfigured = () => {
  * @param {boolean} isJson - Enforce JSON response format
  * @returns {Promise<string>} Content reply
  */
+const queryGroq = async (messages, isJson = false) => {
+  const apiKey = process.env.GROQ_API_KEY;
+  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
+      body: JSON.stringify({
+        model: model,
+        messages: messages,
+        response_format: isJson ? { type: 'json_object' } : undefined,
+        temperature: 0.1,
+        max_tokens: 1500
+      }),
+      signal: AbortSignal.timeout(30000)
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq HTTP ${response.status}: ${errText}`);
+    }
+
+    const data = await response.json();
+    if (!data.choices || data.choices.length === 0) {
+      throw new Error('Groq returned empty choices list.');
+    }
+
+    return data.choices[0].message.content.trim();
+  } catch (err) {
+    console.error(`Groq Query Error: ${err.message}`);
+    throw err;
+  }
+};
+
 const queryOpenRouter = async (messages, isJson = false) => {
+  if (process.env.GROQ_API_KEY) {
+    return queryGroq(messages, isJson);
+  }
+
   const apiKey = process.env.OPENROUTER_API_KEY;
   const model = process.env.OPENROUTER_MODEL || 'google/gemini-2.5-flash:free';
 

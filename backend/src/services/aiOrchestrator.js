@@ -77,6 +77,43 @@ const executeGeminiSDK = async (prompt, isJson, timeoutLimit) => {
 };
 
 /**
+ * Executes a specific prompt against Groq API completions
+ */
+const executeGroq = async (prompt, isJson, timeoutLimit) => {
+  const messages = [{ role: 'user', content: prompt }];
+  const apiKey = process.env.GROQ_API_KEY;
+  const model = process.env.GROQ_MODEL || 'llama-3.3-70b-versatile';
+
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({
+      model: model,
+      messages: messages,
+      response_format: isJson ? { type: 'json_object' } : undefined,
+      temperature: 0.1,
+      max_tokens: 1500
+    }),
+    signal: AbortSignal.timeout(timeoutLimit)
+  });
+
+  if (!response.ok) {
+    const errText = await response.text();
+    throw new Error(`Groq HTTP ${response.status}: ${errText}`);
+  }
+
+  const data = await response.json();
+  if (!data.choices || data.choices.length === 0) {
+    throw new Error('Groq returned empty choices.');
+  }
+
+  return data.choices[0].message.content.trim();
+};
+
+/**
  * AI Orchestrator Core Task Router
  * routes task requests through priority pipelines and applies retry & failover configurations
  * @param {string} taskName - Name of task pipeline (e.g. 'claimDecomposition')
@@ -85,12 +122,15 @@ const executeGeminiSDK = async (prompt, isJson, timeoutLimit) => {
  * @returns {Promise<string>} Model response text
  */
 const orchestrateAiTask = async (taskName, prompt, isJson = false) => {
-  const priorityList = aiConfig.routing[taskName] || ['openrouter', 'gemini'];
+  const priorityList = aiConfig.routing[taskName] || ['groq', 'openrouter', 'gemini'];
   
   let lastError = null;
 
   for (const provider of priorityList) {
     // 1. Skip if provider is not configured
+    if (provider === 'groq' && !process.env.GROQ_API_KEY) {
+      continue;
+    }
     if (provider === 'openrouter' && !isOpenRouterConfigured()) {
       continue;
     }
@@ -110,7 +150,9 @@ const orchestrateAiTask = async (taskName, prompt, isJson = false) => {
         console.log(`- AI Orchestrator routing [${taskName}] to [${provider}] (Attempt ${attempt}/${aiConfig.retries.maxAttempts})...`);
         let reply = '';
 
-        if (provider === 'openrouter') {
+        if (provider === 'groq') {
+          reply = await executeGroq(prompt, isJson, timeoutLimit);
+        } else if (provider === 'openrouter') {
           reply = await executeOpenRouter(prompt, isJson, timeoutLimit);
         } else if (provider === 'gemini') {
           reply = await executeGeminiSDK(prompt, isJson, timeoutLimit);
